@@ -1,0 +1,82 @@
+/* ===== Fondo general del menú (fondo oscuro) ===== */
+.root {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-background-color: linear-gradient(to right, #263238, #37474f); /* Gris azulado oscuro */
+}
+
+/* ===== Título del menú ===== */
+.tituloMenu {
+   -fx-font-size: 32px;
+    -fx-text-fill: #e9eceb;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.25), 4, 0.4, 0, 2);
+    -fx-padding: 15px 0;
+}
+
+/* ===== Contenedor VBox del menú ===== */
+.vbox {
+    -fx-background-color: #ffffff;
+    -fx-padding: 30px 24px;
+    -fx-border-color: #00acc1;
+    -fx-border-width: 2px;
+    -fx-border-radius: 16px;
+    -fx-background-radius: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 12, 0.25, 0, 3);
+}
+
+/* ===== Estilo para botones del menú ===== */
+.button {
+    -fx-background-color: linear-gradient(to bottom, #00bcd4, #0097a7);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12px;
+    -fx-padding: 12px 20px;
+    -fx-font-size: 15px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0.3, 0, 2);
+    -fx-pref-width: 200px;
+}
+
+/* ===== Efecto hover de botones ===== */
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #26c6da, #00acc1);
+}
+
+/* ===== Botón de salir ===== */
+.botonSalir {
+    -fx-background-color: linear-gradient(to bottom, #f44336, #d32f2f);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12px;
+    -fx-padding: 12px 20px;
+    -fx-font-size: 15px;
+    -fx-pref-width: 200px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0.3, 0, 2);
+}
+
+.botonSalir:hover {
+    -fx-background-color: linear-gradient(to bottom, #ef5350, #e53935);
+}
+
+/* ===== Contenedor HBox para los botones ===== */
+.hbox {
+    -fx-spacing: 16px;
+    -fx-padding: 16px;
+    -fx-alignment: center;
+}
+
+/* ===== Texto adaptable para conceptos ===== */
+.textoConcepto {
+    -fx-wrap-text: true;
+    -fx-max-width: 100%;
+    -fx-text-fill: #ffffff; /* Blanco para fondo oscuro */
+}
+
+/* ===== Fondo con imagen centrada y oscura ===== */
+.fondo2 {
+    -fx-background-image: url("../img/image.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+}
