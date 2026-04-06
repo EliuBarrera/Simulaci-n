@@ -18,7 +18,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
@@ -108,6 +107,7 @@ public class LeyCoulombController {
     private double rotV = 0;  // rotación vertical (grados)
     private double dragStartX, dragStartY;
     private double dragStartRotH, dragStartRotV;
+    private boolean isRotating = false;
 
     // ── Handlers ─────────────────────────────────────────────────────────
     private ParticulaHandler    particulaHandler;
@@ -133,11 +133,6 @@ public class LeyCoulombController {
             unidadActual, alphaDeg, betaDeg);
     }
 
-    /** Obtiene la posición de pantalla del nodo. */
-    private double[] screenPos(Nodo nodo) {
-        CoordenadasTransformador t = crearTransformador();
-        return t.logicalToScreen(nodo.getX(), nodo.getY(), nodo.getZ(), modo3D);
-    }
 
     // =========================================================================
     // INICIALIZACIÓN
@@ -225,47 +220,55 @@ public class LeyCoulombController {
                 "-fx-font-family: 'Courier New'; -fx-font-size: 11px;");
         }
 
-        // Mouse handler para rotación 3D (click derecho sobre grafoPane)
+        // Rotación 3D: click izquierdo en canvas vacío, como GeoGebra 3D
         configurarRotacion3D();
     }
 
     // =========================================================================
-    // ROTACIÓN 3D
+    // ROTACIÓN 3D — Click izquierdo en canvas vacío para rotar (estilo GeoGebra)
     // =========================================================================
 
     private void configurarRotacion3D() {
-        grafoPane.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
+        // Los handlers van en canvasPlano directamente.
+        // Los Circle (partículas) son siblings del canvas en grafoPane,
+        // así que clicks en partículas NO llegan al canvas.
+        canvasPlano.setOnMousePressed(e -> {
             if (!modo3D) return;
-            if (e.getButton() == MouseButton.SECONDARY || e.isControlDown()) {
-                dragStartX = e.getSceneX();
-                dragStartY = e.getSceneY();
-                dragStartRotH = rotH;
-                dragStartRotV = rotV;
-                grafoPane.setCursor(Cursor.CROSSHAIR);
-                e.consume();
-            }
+            dragStartX    = e.getSceneX();
+            dragStartY    = e.getSceneY();
+            dragStartRotH = rotH;
+            dragStartRotV = rotV;
+            isRotating    = true;
+            canvasPlano.setCursor(Cursor.OPEN_HAND);
+            e.consume(); // evita que el ScrollPane intercepte
         });
 
-        grafoPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> {
-            if (!modo3D) return;
-            if (e.getButton() == MouseButton.SECONDARY || e.isControlDown()) {
-                double dx = e.getSceneX() - dragStartX;
-                double dy = e.getSceneY() - dragStartY;
-                rotH = dragStartRotH + dx * 0.15;  // sensibilidad horizontal
-                rotV = dragStartRotV - dy * 0.15;   // sensibilidad vertical
-                rotH = Math.max(-25, Math.min(25, rotH));
-                rotV = Math.max(-20, Math.min(20, rotV));
-                redibujar3D();
-                e.consume();
-            }
+        canvasPlano.setOnMouseDragged(e -> {
+            if (!modo3D || !isRotating) return;
+            double dx = e.getSceneX() - dragStartX;
+            double dy = e.getSceneY() - dragStartY;
+            rotH = dragStartRotH + dx * 0.25;
+            rotV = dragStartRotV - dy * 0.25;
+            rotH = Math.max(-45, Math.min(45, rotH));
+            rotV = Math.max(-35, Math.min(35, rotV));
+            canvasPlano.setCursor(Cursor.CLOSED_HAND);
+            redibujar3D();
+            e.consume();
         });
 
-        grafoPane.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
+        canvasPlano.setOnMouseReleased(e -> {
             if (!modo3D) return;
-            if (e.getButton() == MouseButton.SECONDARY || e.isControlDown()) {
-                grafoPane.setCursor(Cursor.DEFAULT);
-                e.consume();
-            }
+            isRotating = false;
+            canvasPlano.setCursor(Cursor.OPEN_HAND);
+            e.consume();
+        });
+
+        canvasPlano.setOnMouseEntered(e -> {
+            if (modo3D) canvasPlano.setCursor(Cursor.OPEN_HAND);
+        });
+
+        canvasPlano.setOnMouseExited(e -> {
+            canvasPlano.setCursor(Cursor.DEFAULT);
         });
     }
 
