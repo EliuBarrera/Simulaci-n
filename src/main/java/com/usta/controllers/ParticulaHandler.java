@@ -164,6 +164,11 @@ public class ParticulaHandler {
         texto.setX(visPx - 4);
         texto.setY(visPy + 4);
 
+        if (modo3D) {
+            circulo.setVisible(false);
+            texto.setVisible(false);
+        }
+
         nodoCirculos.put(nueva, circulo);
         grafoPane.getChildren().addAll(circulo, texto);
 
@@ -265,6 +270,7 @@ public class ParticulaHandler {
                     txt.setX(c.getCenterX() - 4);
                     txt.setY(c.getCenterY() + 4);
                 }
+                if (modo3D) txt.setVisible(false);
             });
 
         particulaEditarComboBox.getSelectionModel().clearSelection();

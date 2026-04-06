@@ -149,6 +149,11 @@ public class RutaHandler {
             peso.setY((pi[1] + pf[1]) / 2);
             peso.setUserData("arista");
 
+            if (modo3D) {
+                linea.setVisible(false);
+                peso.setVisible(false);
+            }
+
             grafoPane.getChildren().addAll(linea, peso);
         }
 
