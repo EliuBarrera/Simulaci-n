@@ -61,6 +61,23 @@
                       <ComboBox fx:id="particulaEliminarComboBox" prefHeight="25.0" prefWidth="159.0" promptText="Partícula a Eliminar" />
                       <Button onAction="#eliminarParticula" text="Eliminar Partícula" />
                       <Label />
+                      <Separator />
+                      <Label text="Editar Partícula" />
+                      <ComboBox fx:id="particulaEditarComboBox" prefHeight="25.0" prefWidth="159.0" promptText="Partícula a Editar" />
+                      <TextField fx:id="particulaEditarField" promptText="Nuevo nombre (opcional)" />
+                      <Label style="-fx-font-size: 10px;" text="Nueva posición (opcional):" />
+                      <HBox spacing="5" alignment="CENTER_LEFT">
+                        <Label text="X:" prefWidth="20" />
+                        <TextField fx:id="editCoordXField" promptText="X" prefWidth="55" />
+                        <Label text="Y:" prefWidth="20" />
+                        <TextField fx:id="editCoordYField" promptText="Y" prefWidth="55" />
+                      </HBox>
+                      <HBox fx:id="editCoordZBox" spacing="5" alignment="CENTER_LEFT" managed="false" visible="false">
+                        <Label text="Z:" prefWidth="20" />
+                        <TextField fx:id="editCoordZField" promptText="Z" prefWidth="55" />
+                      </HBox>
+                      <Button onAction="#editarParticula" text="Editar Partícula" />
+                      <Label />
                                <Button onAction="#Regresar" fx:id="CancelarButton" text="Salir" />
                     </VBox>
                   </content>

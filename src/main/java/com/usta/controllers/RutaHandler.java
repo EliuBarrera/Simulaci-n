@@ -3,6 +3,7 @@ package com.usta.controllers;
 import com.usta.models.Arista;
 import com.usta.models.Grafo;
 import com.usta.models.Nodo;
+import com.usta.utils.CoordenadasTransformador;
 import com.usta.utils.UnidadDistancia;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,6 +19,9 @@ import java.util.List;
 
 /**
  * Maneja la lógica de creación y eliminación de aristas (rutas) entre partículas.
+ *
+ * Las distancias se calculan en coordenadas lógicas del Nodo.
+ * La representación visual usa CoordenadasTransformador para proyectar a pantalla.
  */
 public class RutaHandler {
 
@@ -35,9 +39,10 @@ public class RutaHandler {
     }
 
     /**
-     * Agrega o actualiza la arista entre las partículas seleccionadas en los combos.
+     * Agrega o actualiza la arista entre las partículas seleccionadas.
+     * La distancia se calcula en coordenadas lógicas (unidades del plano).
      */
-    public void agregar() {
+    public void agregar(boolean modo3D) {
         String oNombre = origenRutaComboBox.getValue();
         String dNombre = destinoRutaComboBox.getValue();
         if (oNombre == null || dNombre == null) { mostrarAlerta("Error", "Complete origen y destino."); return; }
@@ -47,8 +52,17 @@ public class RutaHandler {
         Nodo destino = buscarNodo(dNombre);
         if (origen == null || destino == null)  { mostrarAlerta("Error", "Las partículas deben existir."); return; }
 
-        double peso = Math.hypot(origen.getX() - destino.getX(),
-                                 origen.getY() - destino.getY()) / 100.0;
+        // Distancia en coordenadas lógicas (unidades del plano)
+        double peso;
+        if (modo3D) {
+            peso = Math.sqrt(
+                Math.pow(origen.getX() - destino.getX(), 2) +
+                Math.pow(origen.getY() - destino.getY(), 2) +
+                Math.pow(origen.getZ() - destino.getZ(), 2));
+        } else {
+            peso = Math.hypot(origen.getX() - destino.getX(),
+                              origen.getY() - destino.getY());
+        }
 
         Arista existente = null, inversa = null;
         for (Arista a : grafo.getAristas()) {
@@ -90,23 +104,44 @@ public class RutaHandler {
 
     /**
      * Reconstruye las líneas de aristas en el grafoPane y actualiza el combo de eliminar.
+     * Usa el transformador para proyectar las coordenadas lógicas del Nodo a pantalla.
      *
+     * @param modo3D        si el modo 3D está activo
+     * @param t             transformador de coordenadas actual
      * @param unidadActual  unidad de distancia activa
      */
-    public void actualizarVisuales(UnidadDistancia unidadActual) {
+    public void actualizarVisuales(boolean modo3D, CoordenadasTransformador t,
+                                    UnidadDistancia unidadActual) {
         grafoPane.getChildren().removeIf(n -> "arista".equals(n.getUserData()));
 
         for (Arista a : grafo.getAristas()) {
             Nodo o = a.getOrigen(), d = a.getDestino();
-            double[] pi = puntoEnCirc(o.getX(), o.getY(), d.getX(), d.getY(), 15);
-            double[] pf = puntoEnCirc(d.getX(), d.getY(), o.getX(), o.getY(), 15);
+
+            // Proyectar coordenadas lógicas a pantalla
+            double[] screenO = t.logicalToScreen(o.getX(), o.getY(), o.getZ(), modo3D);
+            double[] screenD = t.logicalToScreen(d.getX(), d.getY(), d.getZ(), modo3D);
+
+            double ox = screenO[0], oy = screenO[1];
+            double dx = screenD[0], dy = screenD[1];
+
+            double[] pi = puntoEnCirc(ox, oy, dx, dy, 15);
+            double[] pf = puntoEnCirc(dx, dy, ox, oy, 15);
 
             Line linea = new Line(pi[0], pi[1], pf[0], pf[1]);
             linea.setStrokeWidth(2);
             linea.setStroke(Color.GRAY);
             linea.setUserData("arista");
 
-            double distUnidad = Math.hypot(o.getX() - d.getX(), o.getY() - d.getY()) / 100.0;
+            // Distancia en coordenadas lógicas
+            double distUnidad;
+            if (modo3D) {
+                distUnidad = Math.sqrt(
+                    Math.pow(o.getX() - d.getX(), 2) +
+                    Math.pow(o.getY() - d.getY(), 2) +
+                    Math.pow(o.getZ() - d.getZ(), 2));
+            } else {
+                distUnidad = Math.hypot(o.getX() - d.getX(), o.getY() - d.getY());
+            }
             a.setPeso(distUnidad);
 
             Text peso = new Text(String.format("%.2f %s", distUnidad, unidadActual.getSimbolo()));
@@ -120,9 +155,7 @@ public class RutaHandler {
         actualizarComboEliminar(unidadActual);
     }
 
-    /**
-     * Recarga el combo de rutas eliminables.
-     */
+    /** Recarga el combo de rutas eliminables. */
     public void actualizarComboEliminar(UnidadDistancia unidadActual) {
         ObservableList<String> rutas = FXCollections.observableArrayList();
         for (Arista a : grafo.getAristas()) {
@@ -133,7 +166,7 @@ public class RutaHandler {
         eliminarRutaComboBox.setItems(rutas);
     }
 
-    // ── Utilidades ──────────────────────────────────────────────────────────
+    // ── Utilidades ──────────────────────────────────────────────────────
 
     private Nodo buscarNodo(String nombre) {
         return grafo.getNodos().stream()
@@ -142,9 +175,9 @@ public class RutaHandler {
     }
 
     private double[] puntoEnCirc(double cx, double cy, double tx, double ty, double r) {
-        double dx = tx - cx, dy = ty - cy, d = Math.hypot(dx, dy);
+        double ddx = tx - cx, ddy = ty - cy, d = Math.hypot(ddx, ddy);
         if (d == 0) return new double[]{cx, cy};
-        return new double[]{cx + dx / d * r, cy + dy / d * r};
+        return new double[]{cx + ddx / d * r, cy + ddy / d * r};
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {

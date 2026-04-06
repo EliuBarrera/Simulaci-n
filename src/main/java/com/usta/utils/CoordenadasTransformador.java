@@ -1,163 +1,175 @@
-    package com.usta.utils;
+package com.usta.utils;
+
+/**
+ * Transforma coordenadas entre el sistema lógico (unidades del plano)
+ * y el sistema de pantalla (px).
+ *
+ * ── Modelo de Nodo ──
+ *   Nodo.x, Nodo.y, Nodo.z siempre almacenan coordenadas LÓGICAS
+ *   (unidades del plano), NO píxeles.
+ *
+ * ── 2D ──
+ *   screenX = MARGIN + logX × PX_POR_UNIT
+ *   screenY = (canvasHeight − MARGIN) − logY × PX_POR_UNIT
+ *
+ * ── 3D isométrico ──
+ *   Parametrizado por dos ángulos (alpha, beta) que permiten
+ *   rotar la vista. Por defecto ambos son 30°.
+ *   X axis → derecha-abajo  (ángulo alpha)
+ *   Z axis → izquierda-abajo (ángulo beta)
+ *   Y axis → vertical arriba
+ */
+public class CoordenadasTransformador {
+
+    private static final double MARGIN      = 40.0;
+    private static final double PX_POR_UNIT = 100.0;
+
+    private final double canvasHeight;
+    private final double canvasWidth;
+    private final UnidadDistancia unidad;
+
+    // Ángulos de proyección 3D (en radianes)
+    private final double alphaRad;   // ángulo del eje X desde la horizontal
+    private final double betaRad;    // ángulo del eje Z desde la horizontal
+    private final double cosAlpha, sinAlpha, cosBeta, sinBeta;
+
+    // ── Constructores ────────────────────────────────────────────────────
+
+    /** Constructor 2D (retrocompatible). */
+    public CoordenadasTransformador(double canvasHeight, UnidadDistancia unidad) {
+        this(canvasHeight, 1500, unidad, 30.0, 30.0);
+    }
+
+    /** Constructor 3D con ángulos de rotación. */
+    public CoordenadasTransformador(double canvasHeight, double canvasWidth,
+                                     UnidadDistancia unidad,
+                                     double alphaDeg, double betaDeg) {
+        this.canvasHeight = canvasHeight;
+        this.canvasWidth  = canvasWidth;
+        this.unidad       = unidad;
+        this.alphaRad     = Math.toRadians(alphaDeg);
+        this.betaRad      = Math.toRadians(betaDeg);
+        this.cosAlpha     = Math.cos(alphaRad);
+        this.sinAlpha     = Math.sin(alphaRad);
+        this.cosBeta      = Math.cos(betaRad);
+        this.sinBeta      = Math.sin(betaRad);
+    }
+
+    // ── 2D: lógico → pantalla ────────────────────────────────────────────
+
+    public double unidadXToPx(double ux) {
+        return MARGIN + ux * PX_POR_UNIT;
+    }
+
+    public double unidadYToPx(double uy) {
+        return (canvasHeight - MARGIN) - uy * PX_POR_UNIT;
+    }
+
+    // ── 2D: pantalla → lógico ────────────────────────────────────────────
+
+    public double pxXToUnidad(double pxX) {
+        return (pxX - MARGIN) / PX_POR_UNIT;
+    }
+
+    public double pxYToUnidad(double pxY) {
+        return ((canvasHeight - MARGIN) - pxY) / PX_POR_UNIT;
+    }
+
+    // ── 3D isométrico: lógico → pantalla ─────────────────────────────────
+
+    /** Origen X de la proyección 3D. */
+    public double getOriginX3D() {
+        return MARGIN + 5 * PX_POR_UNIT * cosBeta;
+    }
+
+    /** Origen Y de la proyección 3D. */
+    public double getOriginY3D() {
+        return canvasHeight - MARGIN - 0.5 * PX_POR_UNIT;
+    }
+
+    public double isoXToPx(double ux, double uy, double uz) {
+        return getOriginX3D() + (ux * cosAlpha - uz * cosBeta) * PX_POR_UNIT;
+    }
+
+    public double isoYToPx(double ux, double uy, double uz) {
+        return getOriginY3D() - uy * PX_POR_UNIT
+             - (ux * sinAlpha + uz * sinBeta) * PX_POR_UNIT;
+    }
+
+    // ── 3D: pantalla → lógico (dada Z fija) ──────────────────────────────
 
     /**
-     * Transforma coordenadas entre el sistema de pantalla (px)
-     * y el sistema matemático estándar (origen abajo-izquierda, Y crece arriba).
+     * Dado un punto de pantalla y una Z fija, calcula las coordenadas
+     * lógicas X, Y correspondientes.
      *
-     * El canvas usa:
-     *   - Origen (0,0) en la esquina superior-izquierda
-     *   - Y crece hacia abajo
-     *   - Margen de 40px en los bordes
-     *   - Escala: 100 px = 1 unidad de distancia
-     *
-     * El sistema matemático usa:
-     *   - Origen (0,0) en la esquina inferior-izquierda del área útil
-     *   - Y crece hacia arriba
-     *   - Unidades de distancia reales (m, cm, nm, etc.)
-     *
-     * En modo 3D isométrico:
-     *   - Z es una coordenada lógica (no tiene representación directa en px)
-     *   - Se proyecta a 2D usando proyección isométrica
+     * @return double[]{logX, logY}
      */
-    public class CoordenadasTransformador {
+    public double[] screenToLogical3D(double screenX, double screenY, double fixedZ) {
+        double originX = getOriginX3D();
+        double originY = getOriginY3D();
 
-        private static final double MARGIN      = 40.0;  // margen del canvas en px
-        private static final double PX_POR_UNIT = 100.0; // 100 px = 1 unidad de distancia
+        // De isoXToPx: screenX = originX + (logX * cosAlpha - fixedZ * cosBeta) * S
+        double logX = ((screenX - originX) / PX_POR_UNIT + fixedZ * cosBeta) / cosAlpha;
 
-        // Ángulos de proyección isométrica (en radianes)
-        private static final double ISO_ANGLE = Math.toRadians(30); // 30 grados
-        private static final double COS_ISO   = Math.cos(ISO_ANGLE);
-        private static final double SIN_ISO   = Math.sin(ISO_ANGLE);
+        // De isoYToPx: screenY = originY - logY * S - (logX * sinAlpha + fixedZ * sinBeta) * S
+        double logY = (originY - screenY) / PX_POR_UNIT
+                    - logX * sinAlpha - fixedZ * sinBeta;
 
-        private final double canvasHeight;          // altura total del canvas en px
-        private final UnidadDistancia unidad;       // unidad de distancia activa
+        return new double[]{ logX, logY };
+    }
 
-        public CoordenadasTransformador(double canvasHeight, UnidadDistancia unidad) {
-            this.canvasHeight = canvasHeight;
-            this.unidad       = unidad;
-        }
+    // ── Conveniencia: lógico → pantalla (ambos modos) ────────────────────
 
-        // ── De pantalla (px) a sistema matemático (unidades reales) ──────────────
-
-        /**
-         * Convierte una coordenada X de pantalla a unidades de distancia reales.
-         * El eje X no se invierte: solo se descuenta el margen y se escala.
-         */
-        public double pxXToUnidad(double pxX) {
-            return (pxX - MARGIN) / PX_POR_UNIT;
-        }
-
-        /**
-         * Convierte una coordenada Y de pantalla a unidades de distancia reales.
-         * Se invierte el eje Y: en pantalla Y crece hacia abajo,
-         * en el sistema matemático Y crece hacia arriba.
-         * El origen matemático (0,0) coincide con la esquina inferior-izquierda
-         * del área útil del canvas.
-         */
-        public double pxYToUnidad(double pxY) {
-            double alturaUtil = canvasHeight - MARGIN; // px desde el fondo del área útil
-            return (alturaUtil - pxY) / PX_POR_UNIT;
-        }
-
-        /**
-         * Convierte una coordenada Z lógica a unidades de distancia reales.
-         * Z no tiene inversión — es una coordenada lógica directa.
-         * El valor Z se almacena directamente en unidades del plano.
-         */
-        public double zToUnidad(double z) {
-            return z;  // Z ya está en unidades del plano
-        }
-
-        // ── De sistema matemático (unidades reales) a pantalla (px) ──────────────
-
-        /** Convierte X en unidades reales a px de pantalla. */
-        public double unidadXToPx(double ux) {
-            return MARGIN + ux * PX_POR_UNIT;
-        }
-
-        /** Convierte Y en unidades reales a px de pantalla (invierte el eje). */
-        public double unidadYToPx(double uy) {
-            double alturaUtil = canvasHeight - MARGIN;
-            return alturaUtil - uy * PX_POR_UNIT;
-        }
-
-        // ── Proyección isométrica 3D → 2D ───────────────────────────────────────
-
-        /**
-         * Proyecta coordenadas lógicas (unidades del plano) a posición X en pantalla (px)
-         * usando proyección isométrica.
-         * X va a la derecha, Z va oblicuo a la izquierda.
-         */
-        public double isoXToPx(double ux, double uy, double uz) {
-            // En isométrica: screenX = originX + (x * cos30 - z * cos30) * scale
-            double originX = MARGIN + 5 * PX_POR_UNIT * COS_ISO; // desplazar para dar espacio al eje Z
-            return originX + (ux * COS_ISO - uz * COS_ISO) * PX_POR_UNIT;
-        }
-
-        /**
-         * Proyecta coordenadas lógicas (unidades del plano) a posición Y en pantalla (px)
-         * usando proyección isométrica.
-         * Y va hacia arriba, X y Z van oblicuos hacia abajo.
-         */
-        public double isoYToPx(double ux, double uy, double uz) {
-            double alturaUtil = canvasHeight - MARGIN;
-            // En isométrica: screenY = originY - (y * scale) - (x * sin30 + z * sin30) * scale
-            double originY = alturaUtil - 0.5 * PX_POR_UNIT; // un poco de espacio abajo
-            return originY - uy * PX_POR_UNIT - (ux * SIN_ISO + uz * SIN_ISO) * PX_POR_UNIT;
-        }
-
-        // ── Conversión de unidades a metros ──────────────────────────────────────
-
-        /** Convierte un valor en la unidad activa a metros. */
-        public double toMetros(double valorEnUnidad) {
-            return unidad.convertirAMetros(valorEnUnidad);
-        }
-
-        // ── Diferencias vectoriales en sistema matemático ─────────────────────────
-
-        /**
-         * Calcula Dx entre dos puntos en px, ya en unidades reales.
-         * No requiere inversión porque X no se invierte.
-         */
-        public double dxUnidades(double pxX1, double pxX2) {
-            return pxXToUnidad(pxX2) - pxXToUnidad(pxX1);
-        }
-
-        /**
-         * Calcula Dy entre dos puntos en px, ya en unidades reales y con Y invertido.
-         * El resultado es positivo cuando el destino está "más arriba" visualmente.
-         */
-        public double dyUnidades(double pxY1, double pxY2) {
-            return pxYToUnidad(pxY2) - pxYToUnidad(pxY1);
-        }
-
-        // ── Getters ───────────────────────────────────────────────────────────────
-
-        public UnidadDistancia getUnidad() {
-            return unidad;
-        }
-
-        public double getCanvasHeight() {
-            return canvasHeight;
-        }
-
-        public double getMargin() {
-            return MARGIN;
-        }
-
-        public double getPxPorUnidad() {
-            return PX_POR_UNIT;
-        }
-
-        public static double getIsoAngle() {
-            return ISO_ANGLE;
-        }
-
-        public static double getCosIso() {
-            return COS_ISO;
-        }
-
-        public static double getSinIso() {
-            return SIN_ISO;
+    /**
+     * Convierte coordenadas lógicas a pantalla según el modo.
+     *
+     * @return double[]{screenX, screenY}
+     */
+    public double[] logicalToScreen(double logX, double logY, double logZ, boolean modo3D) {
+        if (modo3D) {
+            return new double[]{ isoXToPx(logX, logY, logZ),
+                                 isoYToPx(logX, logY, logZ) };
+        } else {
+            return new double[]{ unidadXToPx(logX), unidadYToPx(logY) };
         }
     }
+
+    /**
+     * Convierte un punto de pantalla a coordenadas lógicas según el modo.
+     * En 3D se necesita la Z fija del nodo.
+     *
+     * @return double[]{logX, logY}
+     */
+    public double[] screenToLogical(double screenX, double screenY,
+                                     double fixedZ, boolean modo3D) {
+        if (modo3D) {
+            return screenToLogical3D(screenX, screenY, fixedZ);
+        } else {
+            return new double[]{ pxXToUnidad(screenX), pxYToUnidad(screenY) };
+        }
+    }
+
+    // ── Conversión de unidades a metros ──────────────────────────────────
+
+    public double toMetros(double valorEnUnidad) {
+        return unidad.convertirAMetros(valorEnUnidad);
+    }
+
+    // ── Getters ──────────────────────────────────────────────────────────
+
+    public UnidadDistancia getUnidad()   { return unidad; }
+    public double getCanvasHeight()      { return canvasHeight; }
+    public double getCanvasWidth()       { return canvasWidth; }
+    public double getMargin()            { return MARGIN; }
+    public double getPxPorUnidad()       { return PX_POR_UNIT; }
+    public double getAlphaDeg()          { return Math.toDegrees(alphaRad); }
+    public double getBetaDeg()           { return Math.toDegrees(betaRad); }
+    public double getCosAlpha()          { return cosAlpha; }
+    public double getSinAlpha()          { return sinAlpha; }
+    public double getCosBeta()           { return cosBeta; }
+    public double getSinBeta()           { return sinBeta; }
+
+    // Mantener compatibilidad con getCosIso / getSinIso (usan alpha)
+    public static double getCosIso()     { return Math.cos(Math.toRadians(30)); }
+    public static double getSinIso()     { return Math.sin(Math.toRadians(30)); }
+}

@@ -17,7 +17,8 @@ También incluye generación de PDF usando iText y recursos visuales como CSS e 
 - `pom.xml` - configuración de Maven y dependencias
 - `src/main/java/com/usta/App.java` - clase principal de JavaFX
 - `src/main/java/com/usta/Launcher.java` - punto de arranque para el JAR empaquetado
-- `src/main/java/com/usta/controllers/` - controladores de los FXML
+- `src/main/java/com/usta/controllers/` - controladores de los FXML y handlers de negocio
+  - `LeyCoulombController` ahora delega la lógica de partículas, rutas, cálculos, renderizado, PDF y animación a clases especializadas como `ParticulaHandler`, `RutaHandler`, `CalculoHandler`, `GrafoRenderer`, `DetallesPdfHandler` y `AnimacionTabHandler`.
 - `src/main/java/com/usta/models/` - clases del dominio y estructuras de datos
 - `src/main/java/com/usta/utils/` - utilidades de cálculo, PDF y ventanas
 - `src/main/java/com/usta/views/` - archivos FXML, CSS e imágenes
@@ -38,10 +39,16 @@ Proyecto EyM/
 │  │  │  │  │  ├─ Launcher.java
 │  │  │  │  │  ├─ controllers/
 │  │  │  │  │  │  ├─ AnimacionCoulombController.java
+│  │  │  │  │  │  ├─ AnimacionTabHandler.java
+│  │  │  │  │  │  ├─ CalculoHandler.java
 │  │  │  │  │  │  ├─ ConceptosController.java
+│  │  │  │  │  │  ├─ DetallesPdfHandler.java
+│  │  │  │  │  │  ├─ GrafoRenderer.java
 │  │  │  │  │  │  ├─ LeyCoulombController.java
 │  │  │  │  │  │  ├─ LeyGaussController.java
 │  │  │  │  │  │  ├─ MenuController.java
+│  │  │  │  │  │  ├─ ParticulaHandler.java
+│  │  │  │  │  │  ├─ RutaHandler.java
 │  │  │  │  │  │  ├─ SimuladoresController.java
 │  │  │  │  │  │  ├─ UnifiedFlowController.java
 │  │  │  │  │  ├─ models/

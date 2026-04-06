@@ -19,6 +19,8 @@ import java.util.Locale;
 
 /**
  * Dibuja flechas de fuerza (total e individuales) y el cuadrante del canvas (2D e isométrico 3D).
+ *
+ * Los métodos de flechas reciben posiciones de pantalla directamente (no coordenadas lógicas).
  */
 public class GrafoRenderer {
 
@@ -36,9 +38,8 @@ public class GrafoRenderer {
         this.canvasPlano = canvasPlano;
     }
 
-    // ── Canvas ──────────────────────────────────────────────────────────────
+    // ── Canvas 2D ────────────────────────────────────────────────────────
 
-    /** Dibuja la cuadrícula y ejes cartesianos 2D. */
     public void dibujarCuadrante(UnidadDistancia unidadActual) {
         if (canvasPlano == null) return;
         GraphicsContext gc  = canvasPlano.getGraphicsContext2D();
@@ -84,8 +85,13 @@ public class GrafoRenderer {
         gc.fillText("Y (" + unidadActual.getSimbolo() + ")", MARGIN - 8, MARGIN - 8);
     }
 
-    /** Dibuja los ejes isométricos 3D con grillas en los tres planos. */
-    public void dibujarCuadrante3D(UnidadDistancia unidadActual) {
+    // ── Canvas 3D (parametrizado por transformador) ──────────────────────
+
+    /**
+     * Dibuja los ejes isométricos 3D con grillas en los tres planos.
+     * Usa los ángulos del transformador para la proyección.
+     */
+    public void dibujarCuadrante3D(UnidadDistancia unidadActual, CoordenadasTransformador t) {
         if (canvasPlano == null) return;
         GraphicsContext gc = canvasPlano.getGraphicsContext2D();
         double width  = canvasPlano.getWidth();
@@ -94,30 +100,43 @@ public class GrafoRenderer {
         gc.setFill(Color.web("#f5f5f5"));
         gc.fillRect(0, 0, width, height);
 
-        CoordenadasTransformador t = new CoordenadasTransformador(height, unidadActual);
         int MAX = 10;
 
+        // Grilla plano XY (suelo, z=0)
         gc.setStroke(Color.web("#e0e0e0")); gc.setLineWidth(0.5);
         for (int i = 0; i <= MAX; i++) {
-            gc.strokeLine(t.isoXToPx(i,0,0), t.isoYToPx(i,0,0), t.isoXToPx(i,MAX,0), t.isoYToPx(i,MAX,0));
-            gc.strokeLine(t.isoXToPx(0,i,0), t.isoYToPx(0,i,0), t.isoXToPx(MAX,i,0), t.isoYToPx(MAX,i,0));
+            gc.strokeLine(t.isoXToPx(i,0,0), t.isoYToPx(i,0,0),
+                          t.isoXToPx(i,MAX,0), t.isoYToPx(i,MAX,0));
+            gc.strokeLine(t.isoXToPx(0,i,0), t.isoYToPx(0,i,0),
+                          t.isoXToPx(MAX,i,0), t.isoYToPx(MAX,i,0));
         }
+
+        // Grillas laterales (plano XZ y plano YZ)
         gc.setStroke(Color.web("#e8e8e8"));
         for (int i = 0; i <= MAX; i++) {
-            gc.strokeLine(t.isoXToPx(i,0,0), t.isoYToPx(i,0,0), t.isoXToPx(i,0,MAX), t.isoYToPx(i,0,MAX));
-            gc.strokeLine(t.isoXToPx(0,0,i), t.isoYToPx(0,0,i), t.isoXToPx(MAX,0,i), t.isoYToPx(MAX,0,i));
-            gc.strokeLine(t.isoXToPx(0,i,0), t.isoYToPx(0,i,0), t.isoXToPx(0,i,MAX), t.isoYToPx(0,i,MAX));
-            gc.strokeLine(t.isoXToPx(0,0,i), t.isoYToPx(0,0,i), t.isoXToPx(0,MAX,i), t.isoYToPx(0,MAX,i));
+            gc.strokeLine(t.isoXToPx(i,0,0), t.isoYToPx(i,0,0),
+                          t.isoXToPx(i,0,MAX), t.isoYToPx(i,0,MAX));
+            gc.strokeLine(t.isoXToPx(0,0,i), t.isoYToPx(0,0,i),
+                          t.isoXToPx(MAX,0,i), t.isoYToPx(MAX,0,i));
+            gc.strokeLine(t.isoXToPx(0,i,0), t.isoYToPx(0,i,0),
+                          t.isoXToPx(0,i,MAX), t.isoYToPx(0,i,MAX));
+            gc.strokeLine(t.isoXToPx(0,0,i), t.isoYToPx(0,0,i),
+                          t.isoXToPx(0,MAX,i), t.isoYToPx(0,MAX,i));
         }
 
+        // Ejes principales
         gc.setLineWidth(2.5);
-        gc.setStroke(Color.web("#e53935"));
-        gc.strokeLine(t.isoXToPx(0,0,0), t.isoYToPx(0,0,0), t.isoXToPx(MAX,0,0), t.isoYToPx(MAX,0,0));
-        gc.setStroke(Color.web("#43a047"));
-        gc.strokeLine(t.isoXToPx(0,0,0), t.isoYToPx(0,0,0), t.isoXToPx(0,MAX,0), t.isoYToPx(0,MAX,0));
-        gc.setStroke(Color.web("#1e88e5"));
-        gc.strokeLine(t.isoXToPx(0,0,0), t.isoYToPx(0,0,0), t.isoXToPx(0,0,MAX), t.isoYToPx(0,0,MAX));
+        gc.setStroke(Color.web("#e53935")); // X rojo
+        gc.strokeLine(t.isoXToPx(0,0,0), t.isoYToPx(0,0,0),
+                      t.isoXToPx(MAX,0,0), t.isoYToPx(MAX,0,0));
+        gc.setStroke(Color.web("#43a047")); // Y verde
+        gc.strokeLine(t.isoXToPx(0,0,0), t.isoYToPx(0,0,0),
+                      t.isoXToPx(0,MAX,0), t.isoYToPx(0,MAX,0));
+        gc.setStroke(Color.web("#1e88e5")); // Z azul
+        gc.strokeLine(t.isoXToPx(0,0,0), t.isoYToPx(0,0,0),
+                      t.isoXToPx(0,0,MAX), t.isoYToPx(0,0,MAX));
 
+        // Etiquetas de ejes
         String simb = unidadActual.getSimbolo();
         gc.setFont(Font.font(12));
         gc.setFill(Color.web("#e53935"));
@@ -127,6 +146,7 @@ public class GrafoRenderer {
         gc.setFill(Color.web("#1e88e5"));
         gc.fillText("Z (" + simb + ")", t.isoXToPx(0,0,MAX+0.3), t.isoYToPx(0,0,MAX+0.3));
 
+        // Números de ejes
         gc.setFont(Font.font(9)); gc.setFill(Color.web("#666"));
         for (int i = 1; i <= MAX; i++) {
             gc.fillText(String.valueOf(i), t.isoXToPx(i,0,0)-4,  t.isoYToPx(i,0,0)+14);
@@ -136,23 +156,34 @@ public class GrafoRenderer {
 
         gc.setFont(Font.font(14));
         gc.setFill(Color.web("#004d40"));
-        gc.fillText("⬡ MODO 3D  |  10×10×10 " + simb, 20, 25);
+        gc.fillText("⬡ MODO 3D  |  10×10×10 " + simb +
+                     "  |  Rot: " + String.format("%.0f°/%.0f°", t.getAlphaDeg(), t.getBetaDeg()), 20, 25);
     }
 
-    // ── Flechas ──────────────────────────────────────────────────────────────
+    // ── Flechas (reciben posiciones de pantalla) ─────────────────────────
 
-    /** Dibuja una única flecha de fuerza resultante. */
-    public void dibujarFlechaFuerza(Nodo origen, double fuerzaX, double fuerzaY) {
+    /**
+     * Dibuja una única flecha de fuerza resultante.
+     *
+     * @param screenX  posición X de pantalla del origen
+     * @param screenY  posición Y de pantalla del origen
+     */
+    public void dibujarFlechaFuerza(double screenX, double screenY,
+                                     double fuerzaX, double fuerzaY) {
         limpiarFlechas();
         double mag = Math.hypot(fuerzaX, fuerzaY);
         if (mag == 0) return;
-        dibujarFlecha(origen.getX(), origen.getY(),
+        dibujarFlecha(screenX, screenY,
             fuerzaX / mag, -fuerzaY / mag,
             Color.RED, 3, 18, "flechaFuerza", null);
     }
 
-    /** Dibuja una flecha por cada fuerza individual. */
-    public void dibujarFlechasIndividuales(Nodo origen, List<ResultadoFuerza> fuerzas) {
+    /**
+     * Dibuja una flecha por cada fuerza individual.
+     * Las posiciones de screenX/screenY se toman del Circle del origen.
+     */
+    public void dibujarFlechasIndividuales(double screenX, double screenY,
+                                            List<ResultadoFuerza> fuerzas) {
         limpiarFlechas();
         int idx = 0;
         for (ResultadoFuerza rf : fuerzas) {
@@ -161,7 +192,7 @@ public class GrafoRenderer {
             Color color = COLORES_FLECHAS[idx++ % COLORES_FLECHAS.length];
             String etiq = String.format("F_%s\nFe = %s N",
                 rf.getParticulaCausante().getNombre(), formatearNumero(mag));
-            dibujarFlecha(origen.getX(), origen.getY(),
+            dibujarFlecha(screenX, screenY,
                 rf.getFx() / mag, -rf.getFy() / mag,
                 color, 2.5, 15, "flechaIndividual", etiq);
         }
@@ -174,7 +205,7 @@ public class GrafoRenderer {
              n.getUserData().equals("flechaIndividual")));
     }
 
-    // ── Utilidades ──────────────────────────────────────────────────────────
+    // ── Utilidades ──────────────────────────────────────────────────────
 
     private void dibujarFlecha(double sx, double sy,
                                 double dirX, double dirY,

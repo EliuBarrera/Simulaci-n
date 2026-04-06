@@ -16,8 +16,9 @@ import java.util.Set;
  * eléctrico según la Ley de Coulomb.
  *
  * No tiene dependencias con JavaFX ni con la interfaz gráfica.
- * Recibe un transformador de coordenadas para trabajar siempre
- * en unidades reales y en el sistema matemático estándar.
+ *
+ * Las coordenadas del Nodo ya están en unidades lógicas del plano.
+ * Solo se necesita el transformador para la conversión a metros.
  *
  * Soporta cálculos tanto en 2D como en 3D.
  */
@@ -29,16 +30,12 @@ public class CoulombCalculator {
     private final CoordenadasTransformador transformador;
     private final boolean es3D;
 
-    /**
-     * Constructor 2D (retrocompatible).
-     */
+    /** Constructor 2D (retrocompatible). */
     public CoulombCalculator(Grafo grafo, CoordenadasTransformador transformador) {
         this(grafo, transformador, false);
     }
 
-    /**
-     * Constructor con soporte 3D.
-     */
+    /** Constructor con soporte 3D. */
     public CoulombCalculator(Grafo grafo, CoordenadasTransformador transformador, boolean es3D) {
         this.grafo         = grafo;
         this.transformador = transformador;
@@ -48,18 +45,17 @@ public class CoulombCalculator {
     /**
      * Calcula la fuerza eléctrica total y el campo sobre la partícula dada.
      *
-     * @param particulaOrigen Partícula sobre la que se calculan las fuerzas.
-     * @return ResultadoCalculo con todas las fuerzas individuales y la resultante,
-     *         o null si no hay partículas conectadas.
+     * Las coordenadas del Nodo ya son lógicas (unidades del plano),
+     * se usan directamente sin conversión px→unidad.
      */
     public ResultadoCalculo calcular(Nodo particulaOrigen) {
         Set<Nodo> conectados = obtenerConectados(particulaOrigen);
         if (conectados.isEmpty()) return null;
 
-        // Coordenadas de la partícula origen en sistema matemático
-        double x0 = transformador.pxXToUnidad(particulaOrigen.getX());
-        double y0 = transformador.pxYToUnidad(particulaOrigen.getY());
-        double z0 = es3D ? transformador.zToUnidad(particulaOrigen.getZ()) : 0;
+        // Coordenadas lógicas directamente del Nodo
+        double x0 = particulaOrigen.getX();
+        double y0 = particulaOrigen.getY();
+        double z0 = es3D ? particulaOrigen.getZ() : 0;
         double q0 = particulaOrigen.getValorCarga() * 1e-6;
 
         List<ResultadoFuerza> fuerzasIndividuales = new ArrayList<>();
@@ -96,12 +92,13 @@ public class CoulombCalculator {
      */
     private ResultadoFuerza calcularFuerzaIndividual(Nodo origen, double x0, double y0, double z0,
                                                       double q0, Nodo nd) {
-        double x1 = transformador.pxXToUnidad(nd.getX());
-        double y1 = transformador.pxYToUnidad(nd.getY());
-        double z1 = es3D ? transformador.zToUnidad(nd.getZ()) : 0;
+        // Coordenadas lógicas directamente del Nodo
+        double x1 = nd.getX();
+        double y1 = nd.getY();
+        double z1 = es3D ? nd.getZ() : 0;
         double q1 = nd.getValorCarga() * 1e-6;
 
-        // Vector de origen hacia nd, en sistema matemático
+        // Vector de origen hacia nd, en unidades lógicas
         double dx = x1 - x0;
         double dy = y1 - y0;
         double dz = z1 - z0;
