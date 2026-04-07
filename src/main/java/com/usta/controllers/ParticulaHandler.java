@@ -3,7 +3,6 @@ package com.usta.controllers;
 import com.usta.models.Grafo;
 import com.usta.models.Nodo;
 import com.usta.utils.CoordenadasTransformador;
-import com.usta.utils.UnidadDistancia;
 import javafx.collections.ObservableList;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;

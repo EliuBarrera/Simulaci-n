@@ -24,6 +24,7 @@ import javafx.scene.text.Text;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import com.usta.utils.GeneradorEscena3D;
 
 /**
  * Controlador principal para la vista de Ley de Coulomb.
@@ -102,12 +103,6 @@ public class LeyCoulombController {
     private ResultadoCalculo       ultimoResultado = null;
     private ToggleGroup            modoVisualizacionGroup;
 
-    // ── Rotación 3D ──────────────────────────────────────────────────────
-    private double rotH = 0;  // rotación horizontal (grados)
-    private double rotV = 0;  // rotación vertical (grados)
-    private double dragStartX, dragStartY;
-    private double dragStartRotH, dragStartRotV;
-    private boolean isRotating = false;
 
     // ── Handlers ─────────────────────────────────────────────────────────
     private ParticulaHandler    particulaHandler;
@@ -116,6 +111,7 @@ public class LeyCoulombController {
     private GrafoRenderer       renderer;
     private DetallesPdfHandler  detallesPdfHandler;
     private AnimacionTabHandler animacionHandler;
+    private GeneradorEscena3D   generador3D;
 
     // =========================================================================
     // UTILIDADES DE TRANSFORMACIÓN
@@ -123,11 +119,8 @@ public class LeyCoulombController {
 
     /** Crea un transformador con el estado actual (canvas, unidad, ángulos de rotación). */
     private CoordenadasTransformador crearTransformador() {
-        double alphaDeg = 30 + rotH + rotV;
-        double betaDeg  = 30 - rotH + rotV;
-        // Limitar ángulos para mantener legibilidad
-        alphaDeg = Math.max(5, Math.min(75, alphaDeg));
-        betaDeg  = Math.max(5, Math.min(75, betaDeg));
+        double alphaDeg = 30;
+        double betaDeg  = 30;
         return new CoordenadasTransformador(
             canvasPlano.getHeight(), canvasPlano.getWidth(),
             unidadActual, alphaDeg, betaDeg);
@@ -189,21 +182,36 @@ public class LeyCoulombController {
         unidadDistanciaComboBox.setValue(UnidadDistancia.METROS);
         unidadDistanciaComboBox.setOnAction(e -> cambiarUnidad(unidadDistanciaComboBox.getValue()));
 
-        // Callbacks del cálculo → usa posiciones proyectadas
         calculoHandler.setOnResultado(res -> {
             ultimoResultado = res;
             Nodo orig = res.getParticulaOrigen();
             Circle c = nodoCirculos.get(orig);
             if (c == null) return;
-            double sx = c.getCenterX(), sy = c.getCenterY();
 
-            if (fuerzasIndividualesRadio.isSelected()) {
-                renderer.dibujarFlechasIndividuales(sx, sy, res.getFuerzasIndividuales());
+            if (modo3D) {
+                generador3D.sincronizarGrafo(grafo, unidadActual);
+                if (fuerzasIndividualesRadio.isSelected()) {
+                    for (com.usta.models.ResultadoFuerza rf : res.getFuerzasIndividuales()) {
+                        generador3D.dibujarFicha(orig.getX(), orig.getY(), orig.getZ(),
+                            rf.getFx(), rf.getFy(), rf.getFz(), javafx.scene.paint.Color.ORANGE);
+                    }
+                } else {
+                    generador3D.dibujarFicha(orig.getX(), orig.getY(), orig.getZ(),
+                        res.getFuerzaTotalX(), res.getFuerzaTotalY(), res.getFuerzaTotalZ(), javafx.scene.paint.Color.RED);
+                }
             } else {
-                renderer.dibujarFlechaFuerza(sx, sy, res.getFuerzaTotalX(), res.getFuerzaTotalY());
+                double sx = c.getCenterX(), sy = c.getCenterY();
+                if (fuerzasIndividualesRadio.isSelected()) {
+                    renderer.dibujarFlechasIndividuales(sx, sy, res.getFuerzasIndividuales());
+                } else {
+                    renderer.dibujarFlechaFuerza(sx, sy, res.getFuerzaTotalX(), res.getFuerzaTotalY());
+                }
             }
         });
-        calculoHandler.setOnCancelar(() -> renderer.limpiarFlechas());
+        calculoHandler.setOnCancelar(() -> {
+            renderer.limpiarFlechas();
+            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+        });
 
         // Canvas inicial
         canvasPlano.widthProperty().addListener((obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
@@ -220,64 +228,17 @@ public class LeyCoulombController {
                 "-fx-font-family: 'Courier New'; -fx-font-size: 11px;");
         }
 
-        // Rotación 3D: click izquierdo en canvas vacío, como GeoGebra 3D
-        configurarRotacion3D();
-    }
-
-    // =========================================================================
-    // ROTACIÓN 3D — Click izquierdo en canvas vacío para rotar (estilo GeoGebra)
-    // =========================================================================
-
-    private void configurarRotacion3D() {
-        // Los handlers van en canvasPlano directamente.
-        // Los Circle (partículas) son siblings del canvas en grafoPane,
-        // así que clicks en partículas NO llegan al canvas.
-        canvasPlano.setOnMousePressed(e -> {
-            if (!modo3D) return;
-            dragStartX    = e.getSceneX();
-            dragStartY    = e.getSceneY();
-            dragStartRotH = rotH;
-            dragStartRotV = rotV;
-            isRotating    = true;
-            canvasPlano.setCursor(Cursor.OPEN_HAND);
-            e.consume(); // evita que el ScrollPane intercepte
-        });
-
-        canvasPlano.setOnMouseDragged(e -> {
-            if (!modo3D || !isRotating) return;
-            double dx = e.getSceneX() - dragStartX;
-            double dy = e.getSceneY() - dragStartY;
-            rotH = dragStartRotH + dx * 0.25;
-            rotV = dragStartRotV - dy * 0.25;
-            rotH = Math.max(-45, Math.min(45, rotH));
-            rotV = Math.max(-35, Math.min(35, rotV));
-            canvasPlano.setCursor(Cursor.CLOSED_HAND);
-            redibujar3D();
-            e.consume();
-        });
-
-        canvasPlano.setOnMouseReleased(e -> {
-            if (!modo3D) return;
-            isRotating = false;
-            canvasPlano.setCursor(Cursor.OPEN_HAND);
-            e.consume();
-        });
-
-        canvasPlano.setOnMouseEntered(e -> {
-            if (modo3D) canvasPlano.setCursor(Cursor.OPEN_HAND);
-        });
-
-        canvasPlano.setOnMouseExited(e -> {
-            canvasPlano.setCursor(Cursor.DEFAULT);
-        });
-    }
-
-    /** Redibuja todo en modo 3D: canvas, partículas, aristas. */
-    private void redibujar3D() {
-        CoordenadasTransformador t = crearTransformador();
-        renderer.dibujarCuadrante3D(unidadActual, t);
-        reposicionarParticulas();
-        rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
+        // Inicializar 3D nativo
+        generador3D = new GeneradorEscena3D(1000, 800);
+        javafx.beans.binding.DoubleBinding rootWidth = javafx.beans.binding.Bindings.createDoubleBinding(
+            () -> rootPane != null ? rootPane.getWidth() : grafoPane.getWidth(),
+            grafoPane.widthProperty()
+        );
+        generador3D.getSubScene().widthProperty().bind(rootWidth);
+        generador3D.getSubScene().heightProperty().bind(grafoPane.heightProperty());
+        generador3D.getSubScene().setVisible(false);
+        generador3D.getSubScene().setManaged(false);
+        grafoPane.getChildren().add(0, generador3D.getSubScene());
     }
 
     // =========================================================================
@@ -290,7 +251,11 @@ public class LeyCoulombController {
             Nodo ultimo = grafo.getNodos().get(grafo.getNodos().size() - 1);
             Circle c = nodoCirculos.get(ultimo);
             if (c != null) hacerNodoArrastrable(c, ultimo);
-            rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
+            if (modo3D) {
+                generador3D.sincronizarGrafo(grafo, unidadActual);
+            } else {
+                rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
+            }
         });
     }
 
@@ -304,7 +269,10 @@ public class LeyCoulombController {
             renderer.limpiarFlechas();
         }
         CoordenadasTransformador t = crearTransformador();
-        particulaHandler.eliminar(() -> rutaHandler.actualizarVisuales(modo3D, t, unidadActual));
+        particulaHandler.eliminar(() -> {
+            if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+            rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
+        });
         if (nombre != null && nombre.equals(particulaOrigenComboBox.getValue()))
             particulaOrigenComboBox.getSelectionModel().clearSelection();
     }
@@ -312,6 +280,7 @@ public class LeyCoulombController {
     @FXML private void editarParticula() {
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.editar(modo3D, t, () -> {
+            if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
             rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
         });
     }
@@ -319,12 +288,14 @@ public class LeyCoulombController {
     @FXML private void agregarRuta() {
         rutaHandler.agregar(modo3D);
         CoordenadasTransformador t = crearTransformador();
+        if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
 
     @FXML private void eliminarRuta() {
         rutaHandler.eliminar();
         CoordenadasTransformador t = crearTransformador();
+        if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
 
@@ -365,19 +336,34 @@ public class LeyCoulombController {
         ultimoResultado = null;
 
         if (modo3D) {
-            rotH = 0; rotV = 0;
-            canvasPlano.setWidth(1500);
-            canvasPlano.setHeight(1300);
-            CoordenadasTransformador t = crearTransformador();
-            renderer.dibujarCuadrante3D(unidadActual, t);
+            canvasPlano.setVisible(false);
+            generador3D.getSubScene().setVisible(true);
+            generador3D.getSubScene().setManaged(true);
+            
+            for (javafx.scene.Node n : grafoPane.getChildren()) {
+                if (n != canvasPlano && n != generador3D.getSubScene() && !(n instanceof javafx.scene.layout.GridPane)) {
+                    n.setVisible(false);
+                }
+            }
+            generador3D.sincronizarGrafo(grafo, unidadActual);
         } else {
+            canvasPlano.setVisible(true);
+            generador3D.getSubScene().setVisible(false);
+            generador3D.getSubScene().setManaged(false);
+
             canvasPlano.setWidth(2100);
             canvasPlano.setHeight(1300);
             renderer.dibujarCuadrante(unidadActual);
+
+            for (javafx.scene.Node n : grafoPane.getChildren()) {
+                if (n != canvasPlano && n != generador3D.getSubScene()) {
+                    n.setVisible(true);
+                }
+            }
+            reposicionarParticulas();
+            CoordenadasTransformador t = crearTransformador();
+            rutaHandler.actualizarVisuales(false, t, unidadActual);
         }
-        reposicionarParticulas();
-        CoordenadasTransformador t = crearTransformador();
-        rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
 
     @FXML private void onAnimacionTabSeleccionada(Event e) {
