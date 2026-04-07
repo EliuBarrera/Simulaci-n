@@ -63,7 +63,7 @@ public class GeneradorEscena3D {
 
         camera.setNearClip(0.1);
         camera.setFarClip(20000.0);
-        camera.setTranslateZ(-1500); // Zoom inicial
+
         
         // Vista inclinada por defecto
         cameraRotX.setAngle(-30);
@@ -117,6 +117,8 @@ public class GeneradorEscena3D {
         double px = x * scale;
         double py = -y * scale; // Y invertido en JavaFX
         double pz = z * scale;
+
+        //doble inversion del plano en el eje "Y", refactorizar
 
         // Normalizamos el vector de fuerza para darle un tamaño fijo visual
         double mag = Math.sqrt(fx*fx + fy*fy + fz*fz);

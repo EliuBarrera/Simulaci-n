@@ -1,6 +1,5 @@
 package com.usta.controllers;
 
-import com.usta.models.Nodo;
 import com.usta.models.ResultadoFuerza;
 import com.usta.utils.CoordenadasTransformador;
 import com.usta.utils.UnidadDistancia;
@@ -182,7 +181,7 @@ public class GrafoRenderer {
      * Las posiciones de screenX/screenY se toman del Circle del origen.
      */
     public void dibujarFlechasIndividuales(double screenX, double screenY,
-                                            List<ResultadoFuerza> fuerzas) {
+ List<ResultadoFuerza> fuerzas) {
         limpiarFlechas();
         int idx = 0;
         for (ResultadoFuerza rf : fuerzas) {
