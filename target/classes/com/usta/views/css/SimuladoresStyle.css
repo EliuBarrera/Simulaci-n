@@ -1,0 +1,52 @@
+.card {
+    -fx-padding: 20;
+    -fx-spacing: 2;
+    -fx-alignment: center;
+    -fx-pref-width: 240; 
+    -fx-pref-height: 350; 
+    -fx-background-radius: 30; 
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 15, 0, 0, 8);
+}
+
+.card-aspirante { -fx-background-color: #00C7C7; }
+.card-estudiante { -fx-background-color: #FF5722; }
+
+.card:hover {
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.card-subtitle {
+    -fx-font-size: 26px;
+    -fx-text-fill: white;
+    /* Intentamos usar una fuente cursiva del sistema */
+    -fx-font-family: "Brush Script MT", "Segoe UI Light", cursive;
+}
+
+.card-title-id {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-padding: 0 0 10 0;
+}
+
+/* Estilos de fondo y botones que ya tenías */
+.root { -fx-font-family: 'Segoe UI', sans-serif; }
+.tituloMenu {
+    -fx-font-size: 38px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 20;
+}
+.botonSalir {
+    -fx-background-color: #d32f2f;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-padding: 10 30;
+    -fx-cursor: hand;
+}
+.fondo2 {
+    -fx-background-image: url("../img/image.png");
+    -fx-background-size: cover;
+}
