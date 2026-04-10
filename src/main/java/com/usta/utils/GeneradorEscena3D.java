@@ -126,8 +126,54 @@ public class GeneradorEscena3D {
         javafx.geometry.Point3D origin = new javafx.geometry.Point3D(px, py, pz);
         javafx.geometry.Point3D target = new javafx.geometry.Point3D(px + (fx/mag)*factorV, py - (fy/mag)*factorV, pz + (fz/mag)*factorV);
 
-        Cylinder arrowBody = crearCilindroEntrePuntos(origin, target, 4, color);
-        elementosGraficos.getChildren().add(arrowBody);
+        Group arrow = crearFlechaEntrePuntos(origin, target, 4, color);
+        elementosGraficos.getChildren().add(arrow);
+    }
+
+    private Group crearFlechaEntrePuntos(javafx.geometry.Point3D origin, javafx.geometry.Point3D target, double radius, Color color) {
+        javafx.geometry.Point3D yAxis = new javafx.geometry.Point3D(0, 1, 0);
+        javafx.geometry.Point3D diff = target.subtract(origin);
+        double height = diff.magnitude();
+
+        javafx.geometry.Point3D mid = target.midpoint(origin);
+        Translate moveToMidpoint = new Translate(mid.getX(), mid.getY(), mid.getZ());
+
+        javafx.geometry.Point3D axisOfRotation = diff.crossProduct(yAxis);
+        double angle = diff.magnitude() == 0 ? 0 : Math.acos(diff.normalize().dotProduct(yAxis));
+        Rotate rotateAroundCenter = new Rotate(-Math.toDegrees(angle), axisOfRotation);
+
+        Cylinder shaft = new Cylinder(radius, height);
+        shaft.setMaterial(new PhongMaterial(color));
+        
+        // Cabeza de la flecha con MeshView apuntando hacia afuera
+        double headHeight = radius * 5;
+        double headRadius = radius * 2.5; 
+        javafx.scene.shape.TriangleMesh mesh = new javafx.scene.shape.TriangleMesh();
+        mesh.getTexCoords().addAll(0,0);
+        
+        // Vertices: El tip apunta hacia el +Y (Target) y la base descansa en -Y
+        mesh.getPoints().addAll(
+             0, (float)headHeight/2, 0, // Tip de la piramide (+Y)
+            -(float)headRadius, -(float)headHeight/2, -(float)headRadius, // Esquina 1 base (-Y)
+             (float)headRadius, -(float)headHeight/2, -(float)headRadius, // Esquina 2 base (-Y)
+             (float)headRadius, -(float)headHeight/2,  (float)headRadius, // Esquina 3 base (-Y)
+            -(float)headRadius, -(float)headHeight/2,  (float)headRadius  // Esquina 4 base (-Y)
+        );
+        // Generar caras invertidas para visualizacion correcta
+        mesh.getFaces().addAll(0,0, 1,0, 2,0,  0,0, 2,0, 3,0,  0,0, 3,0, 4,0,  0,0, 4,0, 1,0,  1,0, 3,0, 2,0,  1,0, 4,0, 3,0);
+        
+        javafx.scene.shape.MeshView head = new javafx.scene.shape.MeshView(mesh);
+        head.setMaterial(new PhongMaterial(color));
+        
+        // Colocar la cabeza justo al final exterior de la flecha y correrlo un poco afuera del radio
+        // 'height/2' es donde termina el cilindro en +Y. Añadimos headHeight/2 para que la base descanse sobre el cilindro.
+        head.setTranslateY(height / 2 + headHeight / 2); 
+        
+        Group flecha = new Group(shaft, head);
+        flecha.getTransforms().addAll(moveToMidpoint, rotateAroundCenter);
+        // Opcional: Empujar la matriz generada fuera del radio de colision visual (15)
+        flecha.getTransforms().add(new Translate(0, 15, 0));
+        return flecha;
     }
 
     private Cylinder crearCilindroEntrePuntos(javafx.geometry.Point3D origin, javafx.geometry.Point3D target, double radius, Color color) {

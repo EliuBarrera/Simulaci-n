@@ -239,6 +239,25 @@ public class LeyCoulombController {
         generador3D.getSubScene().setVisible(false);
         generador3D.getSubScene().setManaged(false);
         grafoPane.getChildren().add(0, generador3D.getSubScene());
+
+        // Auto-cargar sistema de prueba
+        javafx.application.Platform.runLater(() -> {
+            nombreParticulaField.setText("q1"); tipoCargaField.setText("+"); valorCargaField.setText("4");
+            coordXField.setText("2"); coordYField.setText("5"); coordZField.setText("0"); agregarParticula();
+            
+            nombreParticulaField.setText("q2"); tipoCargaField.setText("-"); valorCargaField.setText("3");
+            coordXField.setText("5"); coordYField.setText("2"); coordZField.setText("0"); agregarParticula();
+            
+            nombreParticulaField.setText("q3"); tipoCargaField.setText("+"); valorCargaField.setText("5");
+            coordXField.setText("8"); coordYField.setText("5"); coordZField.setText("0"); agregarParticula();
+            
+            origenRutaComboBox.setValue("q1"); destinoRutaComboBox.setValue("q2"); agregarRuta();
+            origenRutaComboBox.setValue("q2"); destinoRutaComboBox.setValue("q3"); agregarRuta();
+            origenRutaComboBox.setValue("q3"); destinoRutaComboBox.setValue("q1"); agregarRuta();
+            
+            nombreParticulaField.clear(); tipoCargaField.clear(); valorCargaField.clear();
+            coordXField.clear(); coordYField.clear(); coordZField.clear();
+        });
     }
 
     // =========================================================================
@@ -345,11 +364,13 @@ public class LeyCoulombController {
             for (javafx.scene.Node n : grafoPane.getChildren()) {
                 if (n != canvasPlano && n != generador3D.getSubScene() && !(n instanceof javafx.scene.layout.GridPane)) {
                     n.setVisible(false);
+                    n.setManaged(false);
                 }
             }
             generador3D.sincronizarGrafo(grafo, unidadActual);
             scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
             scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scrollPane.setPannable(false);
         } else {
             canvasPlano.setVisible(true);
             canvasPlano.setWidth(2100);
@@ -361,6 +382,7 @@ public class LeyCoulombController {
             for (javafx.scene.Node n : grafoPane.getChildren()) {
                 if (n != canvasPlano && n != generador3D.getSubScene()) {
                     n.setVisible(true);
+                    n.setManaged(true);
                 }
             }
             reposicionarParticulas();
@@ -368,6 +390,7 @@ public class LeyCoulombController {
             rutaHandler.actualizarVisuales(false, t, unidadActual);
             scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
             scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            scrollPane.setPannable(true);
         }
     }
 
