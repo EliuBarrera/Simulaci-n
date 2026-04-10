@@ -31,8 +31,9 @@ public class GeneradorEscena3D {
     private final Group cameraXform = new Group();
     private final Group cameraXform2 = new Group();
     private final Group cameraXform3 = new Group();
-    private final Rotate cameraRotX = new Rotate(0, Rotate.X_AXIS);
-    private final Rotate cameraRotY = new Rotate(0, Rotate.Y_AXIS);
+    private final Rotate cameraRotX = new Rotate(-30, Rotate.X_AXIS);
+    private final Rotate cameraRotY = new Rotate(45, Rotate.Y_AXIS);
+    private final Translate cameraPan = new Translate(0, 0, 0);
     
     private double mousePosX;
     private double mousePosY;
@@ -56,19 +57,15 @@ public class GeneradorEscena3D {
         cameraXform2.getChildren().add(cameraXform3);
         cameraXform3.getChildren().add(camera);
         
-        cameraXform.getTransforms().add(cameraRotY);
+        cameraXform.getTransforms().addAll(cameraPan, cameraRotY);
         cameraXform2.getTransforms().add(cameraRotX);
 
         root3D.getChildren().add(cameraXform);
 
         camera.setNearClip(0.1);
         camera.setFarClip(20000.0);
-
+        camera.setTranslateZ(-2000); // Mover la cámara hacia atrás
         
-        // Vista inclinada por defecto
-        cameraRotX.setAngle(-30);
-        cameraRotY.setAngle(45);
-
         // Nodos base (ejes y luces)
         construirEjes();
         construirLuces();
@@ -162,7 +159,7 @@ public class GeneradorEscena3D {
         // Eje Y (Verde) -> En JavaFX Y crece hacia abajo, por eso lo hacemos visualmente compatible
         Box yAxis = new Box(2, length, 2);
         yAxis.setMaterial(new PhongMaterial(Color.GREEN));
-        yAxis.setTranslateY(length / 2);
+        yAxis.setTranslateY(-length / 2);
 
         // Eje Z (Azul)
         Box zAxis = new Box(2, 2, length);
@@ -195,17 +192,18 @@ public class GeneradorEscena3D {
 
     private void manejarEventosRaton(SubScene scene) {
         scene.setOnMousePressed((MouseEvent me) -> {
-            mousePosX = me.getSceneX();
-            mousePosY = me.getSceneY();
-            mouseOldX = me.getSceneX();
-            mouseOldY = me.getSceneY();
+            mousePosX = me.getX();
+            mousePosY = me.getY();
+            mouseOldX = me.getX();
+            mouseOldY = me.getY();
+            me.consume(); // Prevenir que el evento se propague al panel de fondo
         });
 
         scene.setOnMouseDragged((MouseEvent me) -> {
             mouseOldX = mousePosX;
             mouseOldY = mousePosY;
-            mousePosX = me.getSceneX();
-            mousePosY = me.getSceneY();
+            mousePosX = me.getX();
+            mousePosY = me.getY();
             
             double mouseDeltaX = (mousePosX - mouseOldX);
             double mouseDeltaY = (mousePosY - mouseOldY);
@@ -224,20 +222,24 @@ public class GeneradorEscena3D {
             // Botón secundario = Paneo (trasladar)
             if (me.isSecondaryButtonDown()) {
                 double modifier = 2.0;
-                Translate t = new Translate(-mouseDeltaX * modifier, -mouseDeltaY * modifier, 0);
-                cameraXform.getTransforms().add(t);
+                cameraPan.setX(cameraPan.getX() - mouseDeltaX * modifier);
+                cameraPan.setY(cameraPan.getY() - mouseDeltaY * modifier);
             }
+            
+            me.consume(); // Evitar movimientos involuntarios del fondo
         });
 
-        scene.setOnScroll((ScrollEvent event) -> {
-            double zoomFactor = 1.1;
-            double deltaY = event.getDeltaY();
-            
-            if (deltaY < 0) {
-                camera.setTranslateZ(camera.getTranslateZ() * zoomFactor);
-            } else if (deltaY > 0) {
-                camera.setTranslateZ(camera.getTranslateZ() / zoomFactor);
+        scene.addEventFilter(ScrollEvent.ANY, (ScrollEvent event) -> {
+            double zoomMod = event.getDeltaY() * 5.0; // Velocidad de zoom controlada
+            if (Math.abs(zoomMod) > 0.01) {
+                double newZ = camera.getTranslateZ() + zoomMod;
+                
+                // Limitar el zoom para no atravesar los objetos ni alejarse infinitamente
+                newZ = Math.min(-100, Math.max(-15000, newZ));
+                
+                camera.setTranslateZ(newZ);
             }
+            event.consume(); // Interceptar scroll a nivel nativo y evitar su propagacion
         });
     }
 
@@ -262,7 +264,7 @@ public class GeneradorEscena3D {
         elementosGraficos.getChildren().clear();
     }
     
-    /**
+    /*
      * Ajusta el tamaño del SubScene
      */
     public void setSize(double width, double height) {

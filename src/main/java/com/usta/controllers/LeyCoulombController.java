@@ -337,6 +337,8 @@ public class LeyCoulombController {
 
         if (modo3D) {
             canvasPlano.setVisible(false);
+            canvasPlano.setWidth(0);
+            canvasPlano.setHeight(0);
             generador3D.getSubScene().setVisible(true);
             generador3D.getSubScene().setManaged(true);
             
@@ -346,14 +348,15 @@ public class LeyCoulombController {
                 }
             }
             generador3D.sincronizarGrafo(grafo, unidadActual);
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         } else {
             canvasPlano.setVisible(true);
-            generador3D.getSubScene().setVisible(false);
-            generador3D.getSubScene().setManaged(false);
-
             canvasPlano.setWidth(2100);
             canvasPlano.setHeight(1300);
             renderer.dibujarCuadrante(unidadActual);
+            generador3D.getSubScene().setVisible(false);
+            generador3D.getSubScene().setManaged(false);
 
             for (javafx.scene.Node n : grafoPane.getChildren()) {
                 if (n != canvasPlano && n != generador3D.getSubScene()) {
@@ -363,6 +366,8 @@ public class LeyCoulombController {
             reposicionarParticulas();
             CoordenadasTransformador t = crearTransformador();
             rutaHandler.actualizarVisuales(false, t, unidadActual);
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         }
     }
 

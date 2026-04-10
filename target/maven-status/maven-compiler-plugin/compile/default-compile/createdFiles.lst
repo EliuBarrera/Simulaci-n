@@ -14,6 +14,7 @@ com\usta\controllers\DetallesPdfHandler.class
 com\usta\models\Nodo.class
 com\usta\utils\UnidadDistancia.class
 com\usta\controllers\LeyGaussController$1.class
+com\usta\utils\GeneradorEscena3D.class
 com\usta\controllers\SimuladoresController.class
 com\usta\models\ResultadoGauss.class
 com\usta\models\Grafo.class
