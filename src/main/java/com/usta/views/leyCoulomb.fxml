@@ -14,10 +14,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
 <HBox prefHeight="640.0" prefWidth="1086.0" stylesheets="@css/Style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.usta.controllers.LeyCoulombController">
@@ -31,30 +28,32 @@
           <content>
             <AnchorPane prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: #14C5D9;">
               <children>
-                <ScrollPane fitToWidth="true" prefHeight="600.0" prefWidth="220.0" style="-fx-background-color: transparent; -fx-background: transparent;" hbarPolicy="NEVER">
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="600.0" prefWidth="220.0" style="-fx-background-color: transparent; -fx-background: transparent;">
                   <content>
                     <VBox prefWidth="200.0" spacing="8" style="-fx-background-color: #14C5D9;">
-                      <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
+                      <padding>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </padding>
                       <Label text="Agregar particula" />
                       <TextField fx:id="nombreParticulaField" promptText="Nombre de la Partícula" />
                       <!-- CAMBIAR POR BUTTONS -->
                       <TextField fx:id="tipoCargaField" promptText="tipo de carga (+ ó  -)" />
                       <TextField fx:id="valorCargaField" promptText="valor carga(µC)" />
-
+      
                       <Separator />
                       <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Coordenadas (en unidades del plano)" />
-                      <HBox spacing="5" alignment="CENTER_LEFT">
-                        <Label text="X:" prefWidth="20" />
-                        <TextField fx:id="coordXField" promptText="X" prefWidth="55" />
-                        <Label text="Y:" prefWidth="20" />
-                        <TextField fx:id="coordYField" promptText="Y" prefWidth="55" />
+                      <HBox alignment="CENTER_LEFT" spacing="5">
+                        <Label prefWidth="20" text="X:" />
+                        <TextField fx:id="coordXField" prefWidth="55" promptText="X" />
+                        <Label prefWidth="20" text="Y:" />
+                        <TextField fx:id="coordYField" prefWidth="55" promptText="Y" />
                       </HBox>
-                      <HBox fx:id="coordZBox" spacing="5" alignment="CENTER_LEFT" managed="false" visible="false">
-                        <Label text="Z:" prefWidth="20" />
-                        <TextField fx:id="coordZField" promptText="Z" prefWidth="55" />
+                      <HBox fx:id="coordZBox" alignment="CENTER_LEFT" managed="false" spacing="5" visible="false">
+                        <Label prefWidth="20" text="Z:" />
+                        <TextField fx:id="coordZField" prefWidth="55" promptText="Z" />
                       </HBox>
                       <Label style="-fx-font-size: 9px; -fx-text-fill: #333;" text="Dejar vacío = posición aleatoria" wrapText="true" />
-
+      
                       <Button onAction="#agregarParticula" text="Agregar Partícula" />
                       <Label text=" " />
                       <Label text="Eliminar Partícula" />
@@ -66,19 +65,19 @@
                       <ComboBox fx:id="particulaEditarComboBox" prefHeight="25.0" prefWidth="159.0" promptText="Partícula a Editar" />
                       <TextField fx:id="particulaEditarField" promptText="Nuevo nombre (opcional)" />
                       <Label style="-fx-font-size: 10px;" text="Nueva posición (opcional):" />
-                      <HBox spacing="5" alignment="CENTER_LEFT">
-                        <Label text="X:" prefWidth="20" />
-                        <TextField fx:id="editCoordXField" promptText="X" prefWidth="55" />
-                        <Label text="Y:" prefWidth="20" />
-                        <TextField fx:id="editCoordYField" promptText="Y" prefWidth="55" />
+                      <HBox alignment="CENTER_LEFT" spacing="5">
+                        <Label prefWidth="20" text="X:" />
+                        <TextField fx:id="editCoordXField" prefWidth="55" promptText="X" />
+                        <Label prefWidth="20" text="Y:" />
+                        <TextField fx:id="editCoordYField" prefWidth="55" promptText="Y" />
                       </HBox>
-                      <HBox fx:id="editCoordZBox" spacing="5" alignment="CENTER_LEFT" managed="false" visible="false">
-                        <Label text="Z:" prefWidth="20" />
-                        <TextField fx:id="editCoordZField" promptText="Z" prefWidth="55" />
+                      <HBox fx:id="editCoordZBox" alignment="CENTER_LEFT" managed="false" spacing="5" visible="false">
+                        <Label prefWidth="20" text="Z:" />
+                        <TextField fx:id="editCoordZField" prefWidth="55" promptText="Z" />
                       </HBox>
                       <Button onAction="#editarParticula" text="Editar Partícula" />
                       <Label />
-                               <Button onAction="#Regresar" fx:id="CancelarButton" text="Salir" />
+                               <Button fx:id="CancelarButton" onAction="#Regresar" text="Salir" />
                     </VBox>
                   </content>
                 </ScrollPane>
@@ -96,8 +95,8 @@
                   <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
                   <children>
                     <Label text="Agregar Ruta" />
-                    <ComboBox fx:id="origenRutaComboBox" prefHeight="25.0" prefWidth="124.0" promptText="Partícula Origen" />
-                    <ComboBox fx:id="destinoRutaComboBox" promptText="Partícula Destino" />
+                    <ComboBox fx:id="origenRutaComboBox" prefHeight="54.0" prefWidth="168.0" promptText="Partícula Origen" />
+                    <ComboBox fx:id="destinoRutaComboBox" prefHeight="54.0" prefWidth="174.0" promptText="Partícula Destino" />
                     <Button onAction="#agregarRuta" text="Agregar Ruta" />
                     <Label text="  " />
                     <Label text="  " />
@@ -132,16 +131,19 @@
 
                     <!-- Toggle 3D -->
                     <Separator />
-                    <CheckBox fx:id="modo3DCheckBox" onAction="#toggleModo3D"
-                              style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #004d40;"
-                              text="⬡ Modo 3D" />
-                    <Label fx:id="modo3DInfoLabel" managed="false" visible="false"
-                           style="-fx-font-size: 9px; -fx-text-fill: #00695c;"
-                           text="Plano isométrico 10×10×10" wrapText="true" />
+                    <CheckBox fx:id="modo3DCheckBox" onAction="#toggleModo3D" style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #004d40;" text="⬡ Modo 3D" />
+                    <Label fx:id="modo3DInfoLabel" managed="false" style="-fx-font-size: 9px; -fx-text-fill: #00695c;" text="Plano isométrico 10×10×10" visible="false" wrapText="true" />
                     <Separator />
 
                     <Button fx:id="calcularButton" onAction="#iniciarCalculo" text="Calcular " />
                     <Button fx:id="cancelarButton" disable="true" onAction="#cancelarCalculo" text="Cancelar" />
+                    
+                    <Separator />
+                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Resultados:" />
+                    <Label style="-fx-font-size: 10px; -fx-text-fill: #333;" text="Magnitud Fe:" />
+                    <Label fx:id="resultadoFuerzaLabel" style="-fx-font-weight: bold; -fx-text-fill: #1976d2;" text="-" wrapText="true" />
+                    <Label style="-fx-font-size: 10px; -fx-text-fill: #333;" text="Campo Eléctrico E:" />
+                    <Label fx:id="resultadoCampoLabel" style="-fx-font-weight: bold; -fx-text-fill: #388e3c;" text="-" wrapText="true" />
                     <Label text=" " />
                   </children>
                 </VBox>
@@ -162,15 +164,15 @@
                     <Label style="-fx-font-size: 10px;" text="Presione el botón para generar el procedimiento:" wrapText="true" />
                     <Button onAction="#generarCalculosDetallados" prefWidth="190" style="-fx-font-weight: bold;" text="Generar Cálculos" />
                     <Label prefHeight="5" text=" " />
-                    <ScrollPane fitToWidth="true" prefHeight="350" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                    <ScrollPane fitToWidth="true" prefHeight="354.0" prefWidth="199.0" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
                       <content>
-                        <TextArea fx:id="calculosDetalladosTextArea" editable="false" prefHeight="350.0" style="-fx-font-family: 'Courier New'; -fx-font-size: 11px;" wrapText="true" />
+                        <TextArea fx:id="calculosDetalladosTextArea" editable="false" prefHeight="417.0" prefWidth="181.0" style="-fx-font-family: 'Courier New'; -fx-font-size: 11px;" wrapText="true" />
                       </content>
                     </ScrollPane>
                     <Label prefHeight="5" text=" " />
-                    <Button onAction="#generarPDF" prefWidth="190" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-font-weight: bold;" text="Generar PDF" />
                   </children>
                 </VBox>
+              <Button layoutX="14.0" layoutY="542.0" onAction="#generarPDF" prefWidth="190" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-font-weight: bold;" text="Generar PDF" />
               </children>
             </AnchorPane>
           </content>
@@ -237,25 +239,8 @@
         <AnchorPane fx:id="grafoPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
           <children>
             <Canvas fx:id="canvasPlano" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-
-            <GridPane layoutX="14.0" layoutY="509.0" prefHeight="77.0" prefWidth="797.0">
-              <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="431.0" minWidth="10.0" prefWidth="123.0" />
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="674.0" minWidth="0.0" prefWidth="674.0" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints maxHeight="100.0" minHeight="10.0" prefHeight="29.0" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="87.0" minHeight="10.0" prefHeight="36.0" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="87.0" minHeight="10.0" prefHeight="36.0" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="86.0" minHeight="10.0" prefHeight="22.0" vgrow="SOMETIMES" />
-              </rowConstraints>
-              <children>
-                <Label fx:id="resultadoFuerzaLabel" text=" " GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Label fx:id="resultadoCampoLabel" text=" " GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                <Label text="Resultado Fe" GridPane.rowIndex="1" />
-                <Label text="Resultado E" GridPane.rowIndex="2" />
-              </children>
-            </GridPane>
+            
+            <!-- El viejo GridPane fue eliminado como se sugirio -->
           </children>
         </AnchorPane>
       </content>

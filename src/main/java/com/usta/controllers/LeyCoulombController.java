@@ -258,6 +258,14 @@ public class LeyCoulombController {
             nombreParticulaField.clear(); tipoCargaField.clear(); valorCargaField.clear();
             coordXField.clear(); coordYField.clear(); coordZField.clear();
         });
+
+        // Seguro anti-zoom fantasma: Si algún scroll logra eludir el SubScene (ej. puntero 
+        // sobre el GridPane), lo asesinamos en la fase de burbujeo para evitar rubber-banding
+        scrollPane.addEventHandler(javafx.scene.input.ScrollEvent.ANY, e -> {
+            if (modo3D) {
+                e.consume();
+            }
+        });
     }
 
     // =========================================================================
@@ -361,8 +369,11 @@ public class LeyCoulombController {
             generador3D.getSubScene().setVisible(true);
             generador3D.getSubScene().setManaged(true);
             
+            canvasPlano.setVisible(false);
+            canvasPlano.setManaged(false);
+
             for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene() && !(n instanceof javafx.scene.layout.GridPane)) {
+                if (n != canvasPlano && n != generador3D.getSubScene()) {
                     n.setVisible(false);
                     n.setManaged(false);
                 }
@@ -370,9 +381,15 @@ public class LeyCoulombController {
             generador3D.sincronizarGrafo(grafo, unidadActual);
             scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
             scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            // Bloqueo matematico del scroll y rubber banding interno
             scrollPane.setPannable(false);
+            scrollPane.setHmax(0);
+            scrollPane.setVmax(0);
+            scrollPane.setHvalue(0);
+            scrollPane.setVvalue(0);
         } else {
             canvasPlano.setVisible(true);
+            canvasPlano.setManaged(true);
             canvasPlano.setWidth(2100);
             canvasPlano.setHeight(1300);
             renderer.dibujarCuadrante(unidadActual);
@@ -391,6 +408,8 @@ public class LeyCoulombController {
             scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
             scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
             scrollPane.setPannable(true);
+            scrollPane.setHmax(1.0);
+            scrollPane.setVmax(1.0);
         }
     }
 
