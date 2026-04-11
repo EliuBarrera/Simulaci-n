@@ -47,7 +47,8 @@ public class LeyCoulombController {
     // ── FXML: partículas ─────────────────────────────────────────────────
     @FXML private TextField  nombreParticulaField;
     @FXML private TextField  valorCargaField;
-    @FXML private TextField  tipoCargaField;
+    @FXML private ToggleButton positivaToggle;
+    @FXML private ToggleButton negativaToggle;
     @FXML private ComboBox<String> particulaEliminarComboBox;
     @FXML private TextField  particulaEditarField;
     @FXML private ComboBox<String> particulaEditarComboBox;
@@ -102,6 +103,7 @@ public class LeyCoulombController {
     private UnidadDistancia        unidadActual = UnidadDistancia.METROS;
     private ResultadoCalculo       ultimoResultado = null;
     private ToggleGroup            modoVisualizacionGroup;
+    private ToggleGroup            polaridadGroup;
 
 
     // ── Handlers ─────────────────────────────────────────────────────────
@@ -165,6 +167,13 @@ public class LeyCoulombController {
         fuerzaTotalRadio.setToggleGroup(modoVisualizacionGroup);
         fuerzasIndividualesRadio.setToggleGroup(modoVisualizacionGroup);
         fuerzaTotalRadio.setSelected(true);
+
+        // Grupo de polaridad (Dual Button)
+        polaridadGroup = new ToggleGroup();
+        positivaToggle.setToggleGroup(polaridadGroup);
+        negativaToggle.setToggleGroup(polaridadGroup);
+        positivaToggle.setSelected(true);
+
         modoVisualizacionGroup.selectedToggleProperty().addListener((obs, o, n) -> {
             renderer.limpiarFlechas();
             if (calculoHandler.estaCalculando())
@@ -242,20 +251,20 @@ public class LeyCoulombController {
 
         // Auto-cargar sistema de prueba
         javafx.application.Platform.runLater(() -> {
-            nombreParticulaField.setText("q1"); tipoCargaField.setText("+"); valorCargaField.setText("4");
+            nombreParticulaField.setText("q1"); positivaToggle.setSelected(true); valorCargaField.setText("4");
             coordXField.setText("2"); coordYField.setText("5"); coordZField.setText("0"); agregarParticula();
             
-            nombreParticulaField.setText("q2"); tipoCargaField.setText("-"); valorCargaField.setText("3");
+            nombreParticulaField.setText("q2"); negativaToggle.setSelected(true); valorCargaField.setText("3");
             coordXField.setText("5"); coordYField.setText("2"); coordZField.setText("0"); agregarParticula();
             
-            nombreParticulaField.setText("q3"); tipoCargaField.setText("+"); valorCargaField.setText("5");
+            nombreParticulaField.setText("q3"); positivaToggle.setSelected(true); valorCargaField.setText("5");
             coordXField.setText("8"); coordYField.setText("5"); coordZField.setText("0"); agregarParticula();
             
             origenRutaComboBox.setValue("q1"); destinoRutaComboBox.setValue("q2"); agregarRuta();
             origenRutaComboBox.setValue("q2"); destinoRutaComboBox.setValue("q3"); agregarRuta();
             origenRutaComboBox.setValue("q3"); destinoRutaComboBox.setValue("q1"); agregarRuta();
             
-            nombreParticulaField.clear(); tipoCargaField.clear(); valorCargaField.clear();
+            nombreParticulaField.clear(); positivaToggle.setSelected(true); valorCargaField.clear();
             coordXField.clear(); coordYField.clear(); coordZField.clear();
         });
 
@@ -467,8 +476,15 @@ public class LeyCoulombController {
                 .filter(n -> n instanceof Text && ((Text) n).getText().startsWith(nodo.getNombre() + " "))
                 .findFirst()
                 .ifPresent(n -> {
-                    ((Text) n).setX(screen[0] - 4);
-                    ((Text) n).setY(screen[1] + 4);
+                    Text txt = (Text) n;
+                    txt.setX(screen[0] - 4);
+                    txt.setY(screen[1] + 4);
+                    
+                    // Asegurar que el contenido refleje si estamos en 3D (mostrando Z) o 2D (ocultando Z)
+                    String nuevaEtiqueta = modo3D
+                        ? nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ") z=" + String.format("%.1f", nodo.getZ())
+                        : nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ")";
+                    txt.setText(nuevaEtiqueta);
                 });
         }
     }
@@ -532,8 +548,15 @@ public class LeyCoulombController {
                     ((Text) n).getText().startsWith(nodo.getNombre() + " "))
                 .findFirst()
                 .ifPresent(n -> {
-                    ((Text) n).setX(screen[0] - 4);
-                    ((Text) n).setY(screen[1] + 4);
+                    Text txt = (Text) n;
+                    txt.setX(screen[0] - 4);
+                    txt.setY(screen[1] + 4);
+
+                    // Actualizar el texto para que coincida con el modo actual (ocultar Z en 2D)
+                    String nuevaEtiqueta = modo3D
+                        ? nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ") z=" + String.format("%.1f", nodo.getZ())
+                        : nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ")";
+                    txt.setText(nuevaEtiqueta);
                 });
 
             me.consume();
@@ -548,7 +571,8 @@ public class LeyCoulombController {
     private void enlazarCamposParticula() {
         particulaHandler.nombreParticulaField    = nombreParticulaField;
         particulaHandler.valorCargaField         = valorCargaField;
-        particulaHandler.tipoCargaField          = tipoCargaField;
+        particulaHandler.positivaToggle          = positivaToggle;
+        particulaHandler.negativaToggle          = negativaToggle;
         particulaHandler.coordXField             = coordXField;
         particulaHandler.coordYField             = coordYField;
         particulaHandler.coordZField             = coordZField;

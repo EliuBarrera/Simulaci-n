@@ -32,7 +32,8 @@ public class ParticulaHandler {
     // Campos FXML — se asignan desde LeyCoulombController
     public TextField nombreParticulaField;
     public TextField valorCargaField;
-    public TextField tipoCargaField;
+    public ToggleButton positivaToggle;
+    public ToggleButton negativaToggle;
     public TextField coordXField;
     public TextField coordYField;
     public TextField coordZField;
@@ -70,7 +71,7 @@ public class ParticulaHandler {
     public void agregar(boolean modo3D, CoordenadasTransformador t, Runnable onAgregada) {
         String nombre        = nombreParticulaField.getText().trim();
         String valorCargaStr = valorCargaField.getText().trim();
-        String tipoCarga     = tipoCargaField.getText().trim();
+        String tipoCarga     = positivaToggle.isSelected() ? "+" : "-";
 
         if (nombre.isEmpty())        { mostrarAlerta("Error", "Ingrese el nombre de la partícula."); return; }
         if (valorCargaStr.isEmpty()) { mostrarAlerta("Error", "Ingrese el valor de la carga.");      return; }
@@ -83,9 +84,9 @@ public class ParticulaHandler {
             mostrarAlerta("Error", "La carga debe ser un número válido."); return;
         }
 
-        if (!tipoCarga.equals("+") && !tipoCarga.equals("-")) {
+        /*if (!tipoCarga.equals("+") && !tipoCarga.equals("-")) {
             mostrarAlerta("Error", "El tipo de carga debe ser + o -"); return;
-        }
+        }*/
         for (Nodo n : grafo.getNodos()) {
             if (n.getNombre().equalsIgnoreCase(nombre)) {
                 mostrarAlerta("Error", "Ya existe una partícula con ese nombre."); return;
@@ -297,7 +298,7 @@ public class ParticulaHandler {
     private void limpiarCampos() {
         nombreParticulaField.clear();
         valorCargaField.clear();
-        tipoCargaField.clear();
+        positivaToggle.setSelected(true);
         coordXField.clear();
         coordYField.clear();
         if (coordZField != null) coordZField.clear();

@@ -92,3 +92,37 @@
     -fx-spacing: 12px;
     -fx-padding: 12px;
 }
+
+/* ===== Segmented Toggle Buttons (Dual Button) ===== */
+.dual-button-container {
+    -fx-spacing: 0;
+    -fx-padding: 0;
+}
+
+.dual-button-left {
+    -fx-background-radius: 10 0 0 10;
+    -fx-border-radius: 10 0 0 10;
+    -fx-pref-width: 80;
+    -fx-border-width: 1.8 0 1.8 1.8;
+}
+
+.dual-button-right {
+    -fx-background-radius: 0 10 10 0;
+    -fx-border-radius: 0 10 10 0;
+    -fx-pref-width: 80;
+    -fx-border-width: 1.8 1.8 1.8 0;
+}
+
+.dual-button-positive:selected {
+    -fx-background-color: linear-gradient(to bottom, #ff8a80, #e57373);
+    -fx-text-fill: white;
+}
+
+.dual-button-negative:selected {
+    -fx-background-color: linear-gradient(to bottom, #81d4fa, #4fc3f7);
+    -fx-text-fill: white;
+}
+
+.toggle-button:selected {
+    -fx-effect: innershadow(gaussian, rgba(0,0,0,0.3), 5, 0.5, 0, 1);
+}

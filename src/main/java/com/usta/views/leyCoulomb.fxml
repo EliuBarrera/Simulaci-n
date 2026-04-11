@@ -13,6 +13,7 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -36,10 +37,16 @@
                                  </padding>
                       <Label text="Agregar particula" />
                       <TextField fx:id="nombreParticulaField" promptText="Nombre de la Partícula" />
-                      <!-- CAMBIAR POR BUTTONS -->
-                      <TextField fx:id="tipoCargaField" promptText="tipo de carga (+ ó  -)" />
-                      <TextField fx:id="valorCargaField" promptText="valor carga(µC)" />
-      
+                      <!-- CAMBIAR POR RADIOBUTTONS -->
+                     <!-- <TextField fx:id="tipoCargaField" promptText="tipo de carga (+ ó  -)" />
+                      <TextField fx:id="valorCargaField" promptText="valor carga(µC)" />-->
+                      <HBox styleClass="dual-button-container">
+                        <ToggleButton fx:id="positivaToggle" styleClass="dual-button-left, dual-button-positive" text="+" />
+                        <ToggleButton fx:id="negativaToggle" styleClass="dual-button-right, dual-button-negative" text="-" />
+                      </HBox>
+                      <TextField fx:id="valorCargaField" promptText="Valor de la carga (µC)" />
+
+
                       <Separator />
                       <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Coordenadas (en unidades del plano)" />
                       <HBox alignment="CENTER_LEFT" spacing="5">
