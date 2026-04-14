@@ -18,9 +18,10 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox prefHeight="640.0" prefWidth="1086.0" stylesheets="@css/Style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.usta.controllers.LeyCoulombController">
+<AnchorPane fx:id="rootPane" stylesheets="@css/Style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.usta.controllers.LeyCoulombController">
+  <HBox AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
   <children>
-    <TabPane maxWidth="220.0" minWidth="220.0" prefHeight="640.0" tabClosingPolicy="UNAVAILABLE">
+    <TabPane fx:id="tabPanePrincipal" maxWidth="220.0" minWidth="220.0" tabClosingPolicy="UNAVAILABLE">
       <tabs>
 
         <!-- ── Partículas ────────────────────────────────────────────────── -->
@@ -254,4 +255,5 @@
     </ScrollPane>
 
   </children>
-</HBox>
+  </HBox>
+</AnchorPane>

@@ -15,6 +15,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -43,6 +44,7 @@ public class LeyCoulombController {
     @FXML private ScrollPane scrollPane;
     @FXML private Canvas     canvasPlano;
     @FXML private AnchorPane rootPane;
+    @FXML private TabPane    tabPanePrincipal;
 
     // ── FXML: partículas ─────────────────────────────────────────────────
     @FXML private TextField  nombreParticulaField;
@@ -114,6 +116,9 @@ public class LeyCoulombController {
     private DetallesPdfHandler  detallesPdfHandler;
     private AnimacionTabHandler animacionHandler;
     private GeneradorEscena3D   generador3D;
+
+    private java.util.List<Text> etiquetasEjes = new java.util.ArrayList<>();
+
 
     // =========================================================================
     // UTILIDADES DE TRANSFORMACIÓN
@@ -239,12 +244,9 @@ public class LeyCoulombController {
 
         // Inicializar 3D nativo
         generador3D = new GeneradorEscena3D(1000, 800);
-        javafx.beans.binding.DoubleBinding rootWidth = javafx.beans.binding.Bindings.createDoubleBinding(
-            () -> rootPane != null ? rootPane.getWidth() : grafoPane.getWidth(),
-            grafoPane.widthProperty()
-        );
-        generador3D.getSubScene().widthProperty().bind(rootWidth);
-        generador3D.getSubScene().heightProperty().bind(grafoPane.heightProperty());
+        // Bind SubScene al viewport del ScrollPane (area disponible sin el TabPane)
+        generador3D.getSubScene().widthProperty().bind(scrollPane.widthProperty().subtract(2));
+        generador3D.getSubScene().heightProperty().bind(scrollPane.heightProperty().subtract(2));
         generador3D.getSubScene().setVisible(false);
         generador3D.getSubScene().setManaged(false);
         grafoPane.getChildren().add(0, generador3D.getSubScene());
@@ -268,14 +270,37 @@ public class LeyCoulombController {
             coordXField.clear(); coordYField.clear(); coordZField.clear();
         });
 
-        // Seguro anti-zoom fantasma: Si algún scroll logra eludir el SubScene (ej. puntero 
-        // sobre el GridPane), lo asesinamos en la fase de burbujeo para evitar rubber-banding
-        scrollPane.addEventHandler(javafx.scene.input.ScrollEvent.ANY, e -> {
+        // ── Anti-zoom fantasma ───────────────────────────────────────────
+        // 1. Interceptar scroll en la FASE DE CAPTURA del ScrollPane
+        //    (antes de que el ScrollPane lo procese) cuando estamos en 3D
+        scrollPane.addEventFilter(ScrollEvent.ANY, e -> {
             if (modo3D) {
                 e.consume();
             }
         });
+
+        // 2. Consumir todo scroll dentro del TabPane para que no afecte el viewport
+        tabPanePrincipal.addEventFilter(ScrollEvent.ANY, Event::consume);
+
+        // 3. Al cambiar de pestaña, guardar y restaurar la posición del scroll
+        //    para evitar "saltos" causados por el re-layout del TabPane
+        tabPanePrincipal.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            double h = scrollPane.getHvalue();
+            double v = scrollPane.getVvalue();
+            javafx.application.Platform.runLater(() -> {
+                scrollPane.setHvalue(h);
+                scrollPane.setVvalue(v);
+            });
+        });
+
+        // Listeners para actualizar etiquetas en 3D al mover la cámara
+        generador3D.getCameraRotX().angleProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
+        generador3D.getCameraRotY().angleProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
+        generador3D.getCameraPan().xProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
+        generador3D.getCameraPan().yProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
+        generador3D.getCamera().translateZProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
     }
+
 
     // =========================================================================
     // ACCIONES FXML — delegan en los handlers
@@ -372,6 +397,8 @@ public class LeyCoulombController {
         ultimoResultado = null;
 
         if (modo3D) {
+            // Resetear la cámara 3D a posición predeterminada
+            generador3D.resetCamera();
             canvasPlano.setVisible(false);
             canvasPlano.setWidth(0);
             canvasPlano.setHeight(0);
@@ -381,8 +408,21 @@ public class LeyCoulombController {
             canvasPlano.setVisible(false);
             canvasPlano.setManaged(false);
 
+            // Crear etiquetas de ejes si no existen
+            if (etiquetasEjes.isEmpty()) {
+                for (int i = 1; i <= 10; i++) {
+                    Text tx = new Text(String.valueOf(i)); tx.setFill(javafx.scene.paint.Color.RED); tx.setFont(javafx.scene.text.Font.font("System Bold", 10));
+                    Text ty = new Text(String.valueOf(i)); ty.setFill(javafx.scene.paint.Color.GREEN); ty.setFont(javafx.scene.text.Font.font("System Bold", 10));
+                    Text tz = new Text(String.valueOf(i)); tz.setFill(javafx.scene.paint.Color.BLUE); tz.setFont(javafx.scene.text.Font.font("System Bold", 10));
+                    etiquetasEjes.addAll(java.util.Arrays.asList(tx, ty, tz));
+                    grafoPane.getChildren().addAll(tx, ty, tz);
+                }
+            }
+            etiquetasEjes.forEach(e -> e.setVisible(true));
+
             for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene()) {
+                if (n != canvasPlano && n != generador3D.getSubScene() && !etiquetasEjes.contains(n)) {
+
                     n.setVisible(false);
                     n.setManaged(false);
                 }
@@ -405,8 +445,11 @@ public class LeyCoulombController {
             generador3D.getSubScene().setVisible(false);
             generador3D.getSubScene().setManaged(false);
 
+            etiquetasEjes.forEach(e -> e.setVisible(false));
+
             for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene()) {
+                if (n != canvasPlano && n != generador3D.getSubScene() && !etiquetasEjes.contains(n)) {
+
                     n.setVisible(true);
                     n.setManaged(true);
                 }
@@ -460,11 +503,101 @@ public class LeyCoulombController {
     }
 
     /**
+     * Proyecta las posiciones 3D a la pantalla 2D y actualiza todas las etiquetas
+     * (partículas, ejes y distancias).
+     */
+    private void reposicionarEtiquetas3D() {
+        if (!modo3D || generador3D == null) return;
+        
+        double scale = generador3D.getScale();
+        javafx.scene.Group world = generador3D.getWorld();
+
+        // 1. Etiquetas de Partículas (Nombre, Carga, Posición)
+        for (Map.Entry<com.usta.models.Nodo, Circle> entry : nodoCirculos.entrySet()) {
+            com.usta.models.Nodo nodo = entry.getKey();
+            
+            javafx.geometry.Point3D p3d = world.localToScene(nodo.getX() * scale, -nodo.getY() * scale, nodo.getZ() * scale);
+            javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
+            
+            if (pLocal != null) {
+                grafoPane.getChildren().stream()
+                    .filter(n -> n instanceof Text && ((Text) n).getText().startsWith(nodo.getNombre() + " "))
+                    .findFirst()
+                    .ifPresent(n -> {
+                        Text txt = (Text) n;
+                        txt.setVisible(true);
+                        txt.setX(pLocal.getX() + 15);
+                        txt.setY(pLocal.getY() - 15);
+                        String nuevaEtiqueta = String.format("%s (%s %s)\nPos: (%.1f, %.1f, %.1f)", 
+                            nodo.getNombre(), nodo.getValorCarga(), nodo.getTipoCarga(), 
+                            nodo.getX(), nodo.getY(), nodo.getZ());
+                        txt.setText(nuevaEtiqueta);
+                    });
+            }
+        }
+
+        // 2. Etiquetas de Ejes (Números 1-10)
+        if (!etiquetasEjes.isEmpty()) {
+            for (int i = 0; i < 10; i++) {
+                double val = i + 1;
+                // X (rojo)
+                updateLabel3D(etiquetasEjes.get(i*3), val * scale, 0, 0);
+                // Y (verde)
+                updateLabel3D(etiquetasEjes.get(i*3+1), 0, -val * scale, 0);
+                // Z (azul)
+                updateLabel3D(etiquetasEjes.get(i*3+2), 0, 0, val * scale);
+            }
+        }
+
+        // 3. Etiquetas de Distancia (Aristas)
+        for (javafx.scene.Node n : grafoPane.getChildren()) {
+            if (n instanceof Text && n.getUserData() instanceof Object[]) {
+                Object[] data = (Object[]) n.getUserData();
+                if ("arista".equals(data[0])) {
+                    Text txt = (Text) n;
+                    com.usta.models.Arista a = (com.usta.models.Arista) data[1];
+                    com.usta.models.Nodo o = a.getOrigen();
+                    com.usta.models.Nodo d = a.getDestino();
+                    
+                    double mx = (o.getX() + d.getX()) / 2.0;
+                    double my = (o.getY() + d.getY()) / 2.0;
+                    double mz = (o.getZ() + d.getZ()) / 2.0;
+                    
+                    javafx.geometry.Point3D p3d = world.localToScene(mx * scale, -my * scale, mz * scale);
+                    javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
+                    
+                    if (pLocal != null) {
+                        txt.setVisible(true);
+                        txt.setX(pLocal.getX());
+                        txt.setY(pLocal.getY());
+                        txt.setText(String.format("%.2f %s", a.getPeso(), unidadActual.getSimbolo()));
+                    }
+                }
+            }
+        }
+    }
+
+
+    private void updateLabel3D(Text txt, double x, double y, double z) {
+        javafx.geometry.Point3D p3d = generador3D.getWorld().localToScene(x, y, z);
+        javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
+        if (pLocal != null) {
+            txt.setX(pLocal.getX() + 5);
+            txt.setY(pLocal.getY() - 5);
+        }
+    }
+
+    /**
      * Recalcula la posición de pantalla de todas las partículas
      * a partir de sus coordenadas lógicas.
      */
     private void reposicionarParticulas() {
+        if (modo3D) {
+            reposicionarEtiquetas3D();
+            return;
+        }
         CoordenadasTransformador t = crearTransformador();
+
         for (Map.Entry<Nodo, Circle> entry : nodoCirculos.entrySet()) {
             Nodo nodo = entry.getKey();
             Circle c  = entry.getValue();

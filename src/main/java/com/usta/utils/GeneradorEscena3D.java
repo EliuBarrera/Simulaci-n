@@ -51,6 +51,13 @@ public class GeneradorEscena3D {
         root3D.getChildren().add(world);
         world.getChildren().add(elementosGraficos);
 
+        // Centrar el cubo 10×10×10 en el origen del mundo para que la cámara
+        // orbite alrededor del centro del cubo, no de una esquina.
+        double halfCube = 5 * scale; // 500
+        world.setTranslateX(-halfCube);
+        world.setTranslateY(halfCube);    // Y invertido en JavaFX
+        world.setTranslateZ(-halfCube);
+
         // Construir Cámara
         camera = new PerspectiveCamera(true);
         cameraXform.getChildren().add(cameraXform2);
@@ -64,7 +71,7 @@ public class GeneradorEscena3D {
 
         camera.setNearClip(0.1);
         camera.setFarClip(20000.0);
-        camera.setTranslateZ(-2000); // Mover la cámara hacia atrás
+        camera.setTranslateZ(-3500); // Mover la cámara más atrás para vista general
         
         // Nodos base (ejes y luces)
         construirEjes();
@@ -217,8 +224,39 @@ public class GeneradorEscena3D {
         origin.setMaterial(new PhongMaterial(Color.BLACK));
 
         Group ejes = new Group(xAxis, yAxis, zAxis, origin);
+        
+        // Agregar Tics (Marcadores de unidad) en los 3 ejes
+        for (int i = 1; i <= 10; i++) {
+            double p = i * scale;
+            
+            // Tics en X: línea perpendicular al eje X (en dirección Y)
+            // Cylinder por defecto es vertical (Y). Sin rotación queda perpendicular a X. ✓
+            Cylinder tickX = new Cylinder(1, 14);
+            tickX.setMaterial(new PhongMaterial(Color.RED));
+            tickX.setTranslateX(p);
+            // Sin rotación: el cilindro va en Y, perpendicular a X
+            
+            // Tics en Y: línea perpendicular al eje Y (en dirección X)
+            // Rotamos 90° sobre Z para que el cilindro quede horizontal (en X)
+            Cylinder tickY = new Cylinder(1, 14);
+            tickY.setMaterial(new PhongMaterial(Color.GREEN));
+            tickY.setTranslateY(-p);
+            tickY.setRotationAxis(Rotate.Z_AXIS);
+            tickY.setRotate(90);
+            
+            // Tics en Z: línea perpendicular al eje Z (en dirección Y)
+            // Sin rotación: el cilindro va en Y, perpendicular a Z. ✓
+            Cylinder tickZ = new Cylinder(1, 14);
+            tickZ.setMaterial(new PhongMaterial(Color.BLUE));
+            tickZ.setTranslateZ(p);
+            // Sin rotación: el cilindro va en Y, perpendicular a Z
+            
+            ejes.getChildren().addAll(tickX, tickY, tickZ);
+        }
+
         world.getChildren().add(ejes);
     }
+
 
     private void construirLuces() {
         AmbientLight ambient = new AmbientLight(Color.color(0.5, 0.5, 0.5));
@@ -265,11 +303,16 @@ public class GeneradorEscena3D {
                 cameraRotX.setAngle(rx);
             }
             
-            // Botón secundario = Paneo (trasladar)
+            // Botón secundario = Paneo (trasladar) — con límites
             if (me.isSecondaryButtonDown()) {
                 double modifier = 2.0;
-                cameraPan.setX(cameraPan.getX() - mouseDeltaX * modifier);
-                cameraPan.setY(cameraPan.getY() - mouseDeltaY * modifier);
+                double newPanX = cameraPan.getX() - mouseDeltaX * modifier;
+                double newPanY = cameraPan.getY() - mouseDeltaY * modifier;
+                // Limitar el paneo para no perder de vista el sistema
+                newPanX = Math.max(-500, Math.min(500, newPanX));
+                newPanY = Math.max(-500, Math.min(500, newPanY));
+                cameraPan.setX(newPanX);
+                cameraPan.setY(newPanY);
             }
             
             me.consume(); // Evitar movimientos involuntarios del fondo
@@ -280,8 +323,8 @@ public class GeneradorEscena3D {
             if (Math.abs(zoomMod) > 0.01) {
                 double newZ = camera.getTranslateZ() + zoomMod;
                 
-                // Limitar el zoom para no atravesar los objetos ni alejarse infinitamente
-                newZ = Math.min(-100, Math.max(-15000, newZ));
+                // Limitar el zoom para no atravesar los objetos ni alejarse demasiado
+                newZ = Math.min(-300, Math.max(-5000, newZ));
                 
                 camera.setTranslateZ(newZ);
             }
@@ -291,7 +334,18 @@ public class GeneradorEscena3D {
 
     // --- Métodos de utilidad pública ---
 
+    public Rotate getCameraRotX() { return cameraRotX; }
+    public Rotate getCameraRotY() { return cameraRotY; }
+    public Translate getCameraPan() { return cameraPan; }
+    public PerspectiveCamera getCamera() { return camera; }
+
+    public Group getWorld() {
+
+        return world;
+    }
+
     public SubScene getSubScene() {
+
         return subScene;
     }
 
@@ -308,6 +362,18 @@ public class GeneradorEscena3D {
      */
     public void limpiarElementos() {
         elementosGraficos.getChildren().clear();
+    }
+
+    /**
+     * Restablece la cámara a la posición predeterminada que muestra
+     * el cubo 3D completo centrado en la vista.
+     */
+    public void resetCamera() {
+        cameraRotX.setAngle(-30);
+        cameraRotY.setAngle(45);
+        cameraPan.setX(0);
+        cameraPan.setY(0);
+        camera.setTranslateZ(-3500);
     }
     
     /*

@@ -112,7 +112,12 @@ public class RutaHandler {
      */
     public void actualizarVisuales(boolean modo3D, CoordenadasTransformador t,
                                     UnidadDistancia unidadActual) {
-        grafoPane.getChildren().removeIf(n -> "arista".equals(n.getUserData()));
+        grafoPane.getChildren().removeIf(n -> {
+            Object ud = n.getUserData();
+            if (ud instanceof String) return "arista".equals(ud);
+            if (ud instanceof Object[]) return "arista".equals(((Object[])ud)[0]);
+            return false;
+        });
 
         for (Arista a : grafo.getAristas()) {
             Nodo o = a.getOrigen(), d = a.getDestino();
@@ -147,14 +152,17 @@ public class RutaHandler {
             Text peso = new Text(String.format("%.2f %s", distUnidad, unidadActual.getSimbolo()));
             peso.setX((pi[0] + pf[0]) / 2);
             peso.setY((pi[1] + pf[1]) / 2);
-            peso.setUserData("arista");
+            // Guardamos tanto el tag como el objeto Arista para facilitar la proyección 3D
+            peso.setUserData(new Object[]{"arista", a});
 
             if (modo3D) {
                 linea.setVisible(false);
-                peso.setVisible(false);
+                // El peso se mantiene visible, pero será reposicionado por el controlador en 3D
+                peso.setVisible(true);
             }
 
             grafoPane.getChildren().addAll(linea, peso);
+
         }
 
         actualizarComboEliminar(unidadActual);
