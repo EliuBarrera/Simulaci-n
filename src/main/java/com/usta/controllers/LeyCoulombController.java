@@ -117,8 +117,6 @@ public class LeyCoulombController {
     private AnimacionTabHandler animacionHandler;
     private GeneradorEscena3D   generador3D;
 
-    private java.util.List<Text> etiquetasEjes = new java.util.ArrayList<>();
-
 
     // =========================================================================
     // UTILIDADES DE TRANSFORMACIÓN
@@ -271,11 +269,16 @@ public class LeyCoulombController {
         });
 
         // ── Anti-zoom fantasma ───────────────────────────────────────────
-        // 1. Interceptar scroll en la FASE DE CAPTURA del ScrollPane
-        //    (antes de que el ScrollPane lo procese) cuando estamos en 3D
+        // Interceptar scroll en el ScrollPane solo cuando NO proviene del SubScene 3D.
+        // El SubScene ya tiene su propio filtro que maneja el zoom y consume el evento.
         scrollPane.addEventFilter(ScrollEvent.ANY, e -> {
             if (modo3D) {
-                e.consume();
+                // Permitir que el SubScene maneje el zoom; solo consumir scroll
+                // que se origine fuera del SubScene (e.g. desde bordes del scrollpane)
+                if (e.getTarget() != generador3D.getSubScene() 
+                    && !generador3D.getSubScene().equals(e.getTarget())) {
+                    e.consume();
+                }
             }
         });
 
@@ -408,20 +411,8 @@ public class LeyCoulombController {
             canvasPlano.setVisible(false);
             canvasPlano.setManaged(false);
 
-            // Crear etiquetas de ejes si no existen
-            if (etiquetasEjes.isEmpty()) {
-                for (int i = 1; i <= 10; i++) {
-                    Text tx = new Text(String.valueOf(i)); tx.setFill(javafx.scene.paint.Color.RED); tx.setFont(javafx.scene.text.Font.font("System Bold", 10));
-                    Text ty = new Text(String.valueOf(i)); ty.setFill(javafx.scene.paint.Color.GREEN); ty.setFont(javafx.scene.text.Font.font("System Bold", 10));
-                    Text tz = new Text(String.valueOf(i)); tz.setFill(javafx.scene.paint.Color.BLUE); tz.setFont(javafx.scene.text.Font.font("System Bold", 10));
-                    etiquetasEjes.addAll(java.util.Arrays.asList(tx, ty, tz));
-                    grafoPane.getChildren().addAll(tx, ty, tz);
-                }
-            }
-            etiquetasEjes.forEach(e -> e.setVisible(true));
-
             for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene() && !etiquetasEjes.contains(n)) {
+                if (n != canvasPlano && n != generador3D.getSubScene()) {
 
                     n.setVisible(false);
                     n.setManaged(false);
@@ -445,10 +436,8 @@ public class LeyCoulombController {
             generador3D.getSubScene().setVisible(false);
             generador3D.getSubScene().setManaged(false);
 
-            etiquetasEjes.forEach(e -> e.setVisible(false));
-
             for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene() && !etiquetasEjes.contains(n)) {
+                if (n != canvasPlano && n != generador3D.getSubScene()) {
 
                     n.setVisible(true);
                     n.setManaged(true);
@@ -533,19 +522,6 @@ public class LeyCoulombController {
                             nodo.getX(), nodo.getY(), nodo.getZ());
                         txt.setText(nuevaEtiqueta);
                     });
-            }
-        }
-
-        // 2. Etiquetas de Ejes (Números 1-10)
-        if (!etiquetasEjes.isEmpty()) {
-            for (int i = 0; i < 10; i++) {
-                double val = i + 1;
-                // X (rojo)
-                updateLabel3D(etiquetasEjes.get(i*3), val * scale, 0, 0);
-                // Y (verde)
-                updateLabel3D(etiquetasEjes.get(i*3+1), 0, -val * scale, 0);
-                // Z (azul)
-                updateLabel3D(etiquetasEjes.get(i*3+2), 0, 0, val * scale);
             }
         }
 
