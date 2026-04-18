@@ -13,7 +13,7 @@ public class MenuController {
 
     @FXML
     private void abrirVistaConceptos() throws IOException {
-        App.setRoot("conceptos"); // Asegúrate de que este FXML existe
+        App.setRoot("conceptosSelector"); // Abre el selector de conceptos
     }
 
     @FXML

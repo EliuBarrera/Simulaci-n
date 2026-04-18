@@ -10,11 +10,13 @@ com\usta\controllers\AnimacionCoulombController$EstadoCirculo.class
 com\usta\controllers\GrafoRenderer.class
 com\usta\utils\GaussCalculator.class
 com\usta\utils\PdfGenerator.class
+com\usta\controllers\ConceptosFlujoController.class
 com\usta\controllers\DetallesPdfHandler.class
 com\usta\models\Nodo.class
 com\usta\utils\UnidadDistancia.class
 com\usta\controllers\LeyGaussController$1.class
 com\usta\utils\GeneradorEscena3D.class
+com\usta\controllers\ConceptosGaussController.class
 com\usta\controllers\SimuladoresController.class
 com\usta\models\ResultadoGauss.class
 com\usta\models\Grafo.class
@@ -24,6 +26,7 @@ com\usta\utils\GaussCalculator$1.class
 module-info.class
 com\usta\utils\Ventana.class
 com\usta\controllers\LeyGaussController.class
+com\usta\controllers\ConceptosSelectorController.class
 com\usta\controllers\AnimacionTabHandler.class
 com\usta\models\ResultadoFuerza.class
 com\usta\models\TipoFigura.class

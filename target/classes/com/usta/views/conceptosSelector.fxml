@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.paint.ImagePattern?>
+<?import javafx.scene.image.Image?>
+
+<VBox xmlns="http://javafx.com/javafx/13"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.usta.controllers.ConceptosSelectorController"
+      alignment="CENTER"
+      spacing="30"
+      prefWidth="800"
+      prefHeight="600"
+      styleClass="fondo2"
+      stylesheets="@css/SimuladoresStyle.css">
+
+    <children>
+        <Label text="Conceptos Básicos" styleClass="tituloMenu"/>
+
+        <HBox spacing="40" alignment="CENTER">
+            
+            <VBox styleClass="card, card-aspirante" onMouseClicked="#conceptosCoulomb">
+                <children>
+                    <StackPane>
+                        <padding><Insets top="20" bottom="10"/></padding>
+                       <Circle radius="75" stroke="WHITE" strokeWidth="3">
+                           <fill>
+                     <ImagePattern>
+                            <image>
+                             <Image url="@img/leyCoulomb.png" />
+                         </image>
+                  </ImagePattern>
+                             </fill>
+                     </Circle>
+                    </StackPane>
+                    
+                    <Label text="Ley de Coulomb" styleClass="card-subtitle"/>
+                </children>
+            </VBox>
+            
+
+            <VBox styleClass="card, card-estudiante" onMouseClicked="#conceptosGauss">
+                <children>
+                    <StackPane>
+                        <padding><Insets top="20" bottom="10"/></padding>
+                    <Circle radius="75" stroke="WHITE" strokeWidth="3">
+              <fill>
+                <ImagePattern>
+                    <image>
+                         <Image url="@img/leydeGauss.png"/>
+                     </image>
+            </ImagePattern>
+             </fill>
+        </Circle>
+
+                    </StackPane>
+                    
+                    <Label text="Ley de Gauss" styleClass="card-subtitle"/>
+                </children>
+            </VBox>
+
+ 
+            <VBox styleClass="card, card-aspirante" onMouseClicked="#conceptosFlujo">
+                 
+                <children>
+                    <StackPane>
+                        <padding><Insets top="20" bottom="10"/></padding>
+                       <Circle radius="75" stroke="WHITE" strokeWidth="3">
+                           <fill>
+                     <ImagePattern>
+                            <image>
+                             <Image url="@img/flujoElectrico.png" />
+                         </image>
+                  </ImagePattern>
+                             </fill>
+                     </Circle>
+                    </StackPane>
+                    
+                    <Label text="Flujo Eléctrico" styleClass="card-subtitle"/>
+                </children>
+            </VBox>
+        </HBox>
+
+        <Button text="Volver" onAction="#volverLogin" styleClass="botonSalir"/>
+    </children>
+
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+</VBox>

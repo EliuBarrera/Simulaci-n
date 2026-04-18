@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.usta.controllers.ConceptosController"
+            fitToWidth="true"
+            styleClass="scroll-pane"
+            stylesheets="@css/Style.css">
+
+    <VBox alignment="TOP_CENTER"
+          spacing="20"
+          prefWidth="1000"
+          styleClass="fondo2"
+          stylesheets="@css/Style.css">
+        <padding>
+            <Insets top="30" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <children>
+            <!-- Título -->
+            <Text text="Conceptos Básicos - Ley de Coulomb" styleClass="tituloConceptos">
+                <font>
+                    <Font size="28"/>
+                </font>
+            </Text>
+
+            <!-- Contenido -->
+            <VBox alignment="TOP_LEFT" spacing="20">
+                <children>
+                    <!-- Definición -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        La Ley de Coulomb describe la fuerza eléctrica entre dos cargas puntuales.
+                        Establece que la magnitud de la fuerza eléctrica (F) entre dos cargas es directamente proporcional 
+                        al producto de las magnitudes de las cargas (q₁ y q₂) e inversamente proporcional al cuadrado de 
+                        la distancia (r) que las separa. Esta fuerza actúa a lo largo de la línea que une las dos cargas.
+                    </Text>
+
+                    <ImageView fx:id="fc"
+                               fitWidth="800"
+                               preserveRatio="true"
+                               style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0.3, 0, 1);"
+                               pickOnBounds="true" />
+
+                    <!-- Fórmula principal -->
+                    <Label text="F = k · |q₁ · q₂| / r²" styleClass="formulaLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #00695c;"/>
+
+                    <!-- Variables -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        Donde:
+                        • F es la magnitud de la fuerza eléctrica (en Newtons, N).
+                        • q₁ y q₂ son las magnitudes de las cargas eléctricas (en Coulombs, C).
+                        • r es la distancia entre las cargas (en metros, m).
+                        • k es la constante de Coulomb, aproximadamente igual a 8.99 × 10⁹ N·m²/C².
+
+                        La fuerza puede ser atractiva si las cargas son de signos opuestos,
+                        o repulsiva si son del mismo signo.
+                    </Text>
+
+                    <!-- Conceptos clave adicionales -->
+                    <Text text="Conceptos Clave" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        ● Carga Eléctrica: Propiedad física fundamental de la materia. Existen dos tipos: positiva (+) y negativa (−). La unidad de medida es el Coulomb (C). La carga elemental es e = 1.602 × 10⁻¹⁹ C.
+
+                        ● Principio de Superposición: La fuerza total sobre una carga debida a varias cargas es la suma vectorial de las fuerzas individuales que cada carga ejerce sobre ella.
+
+                        ● Campo Eléctrico (E): Una carga crea un campo eléctrico en el espacio que la rodea. Se define como la fuerza por unidad de carga: E = F / q. Sus unidades son N/C.
+
+                        ● Constante de Coulomb (k): Su valor es k = 8.99 × 10⁹ N·m²/C². También se expresa como k = 1 / (4πε₀), donde ε₀ = 8.854 × 10⁻¹² C²/(N·m²) es la permitividad del vacío.
+
+                        ● Fuerzas de Atracción y Repulsión: Cargas del mismo signo se repelen; cargas de signos opuestos se atraen. La fuerza es siempre a lo largo de la línea que une las dos cargas.
+                    </Text>
+
+                    <!-- Botón para volver -->
+                    <HBox alignment="CENTER" spacing="15">
+                        <Button text="Volver a Conceptos"
+                                onAction="#volverAConceptos"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                        <Button text="Volver al Menú"
+                                onAction="#volverAlMenu"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                    </HBox>
+                </children>
+            </VBox>
+        </children>
+    </VBox>
+</ScrollPane>

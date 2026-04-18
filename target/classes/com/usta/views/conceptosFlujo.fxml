@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.usta.controllers.ConceptosFlujoController"
+            fitToWidth="true"
+            styleClass="scroll-pane"
+            stylesheets="@css/Style.css">
+
+    <VBox alignment="TOP_CENTER"
+          spacing="20"
+          prefWidth="1000"
+          styleClass="fondo2"
+          stylesheets="@css/Style.css">
+        <padding>
+            <Insets top="30" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <children>
+            <!-- Título -->
+            <Text text="Conceptos Básicos - Flujo Eléctrico" styleClass="tituloConceptos">
+                <font>
+                    <Font size="28"/>
+                </font>
+            </Text>
+
+            <!-- Contenido -->
+            <VBox alignment="TOP_LEFT" spacing="20">
+                <children>
+                    <!-- Definición principal -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        El flujo eléctrico es una magnitud escalar que representa la cantidad de campo eléctrico que atraviesa una superficie dada. Conceptualmente, puede interpretarse como el número de líneas de campo eléctrico que pasan a través de una superficie.
+
+                        El flujo eléctrico es un concepto central en el electromagnetismo, ya que conecta la distribución de cargas eléctricas con el comportamiento del campo eléctrico en el espacio. Es la cantidad fundamental en la Ley de Gauss.
+                    </Text>
+
+                    <!-- Fórmula para superficie plana -->
+                    <Label text="Φ_E = E⃗ · A⃗ = E · A · cos(θ)" styleClass="formulaLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #00695c;"/>
+
+                    <!-- Variables -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        Para una superficie plana en un campo uniforme:
+                        • Φ_E es el flujo eléctrico (en N·m²/C, también llamados V·m).
+                        • E es la magnitud del campo eléctrico (en N/C).
+                        • A es el área de la superficie (en m²).
+                        • θ es el ángulo entre el vector campo eléctrico E⃗ y el vector normal a la superficie A⃗.
+                        • cos(θ) determina qué componente del campo es perpendicular a la superficie.
+                    </Text>
+
+                    <!-- Fórmula general -->
+                    <Text text="Forma General (Integral)" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Label text="Φ_E = ∫∫ E⃗ · dA⃗" styleClass="formulaLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #00695c;"/>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        Para superficies no planas o campos no uniformes, el flujo se calcula mediante una integral de superficie. Se divide la superficie en elementos infinitesimales dA⃗, cada uno con su propio vector normal, y se suma (integra) la contribución de cada elemento.
+                    </Text>
+
+                    <!-- Conceptos clave -->
+                    <Text text="Conceptos Clave" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        ● Líneas de Campo Eléctrico: Son líneas imaginarias que representan la dirección y sentido del campo eléctrico. Salen de cargas positivas y llegan a cargas negativas. Cuanto más juntas estén, más intenso es el campo.
+
+                        ● Vector Normal a la Superficie (n̂): Es un vector unitario perpendicular a la superficie en cada punto. Para superficies cerradas, por convención apunta hacia afuera. El flujo depende de la orientación relativa entre E⃗ y n̂.
+
+                        ● Ángulo θ (theta): El ángulo entre E⃗ y el vector normal de la superficie determina cuánto flujo la atraviesa:
+                          - θ = 0°: El campo es perpendicular a la superficie → Flujo máximo (Φ = E·A).
+                          - θ = 90°: El campo es paralelo a la superficie → Flujo nulo (Φ = 0).
+                          - θ = 180°: El campo entra por la superficie → Flujo negativo (Φ = −E·A).
+
+                        ● Flujo Positivo y Negativo: Un flujo positivo indica que las líneas de campo salen de la superficie. Un flujo negativo indica que las líneas entran. El flujo neto es la diferencia entre líneas que salen y entran.
+
+                        ● Unidades: El flujo eléctrico se mide en N·m²/C (Newton metro cuadrado por Coulomb), equivalente a V·m (Volt metro).
+                    </Text>
+
+                    <!-- Casos especiales -->
+                    <Text text="Casos Especiales de Figuras Geométricas" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        ● Rectángulo: Para una superficie rectangular de base b y altura h en un campo uniforme E con ángulo θ respecto a la normal:
+                          Φ = E · b · h · cos(θ)
+
+                        ● Triángulo: Para una superficie triangular de base b y altura h:
+                          A = (b · h) / 2
+                          Φ = E · (b · h / 2) · cos(θ)
+
+                        ● Círculo (Disco): Para un disco de radio r:
+                          A = π · r²
+                          Φ = E · π · r² · cos(θ)
+
+                        En todos los casos, cuando θ = 0° el flujo es máximo, y cuando θ = 90° el flujo es cero, porque el campo es paralelo a la superficie y ninguna línea la atraviesa.
+                    </Text>
+
+                    <!-- Relación con la Ley de Gauss -->
+                    <Text text="Relación con la Ley de Gauss" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        La Ley de Gauss establece que el flujo eléctrico neto a través de cualquier superficie cerrada es proporcional a la carga total encerrada:
+
+                        Φ_E (neto) = Q_enc / ε₀
+
+                        Esto significa que si una superficie cerrada no encierra ninguna carga, el flujo neto es cero: todas las líneas que entran también salen. Si encierra una carga positiva, el flujo neto es positivo (las líneas salen). Si encierra una carga negativa, el flujo neto es negativo (las líneas entran).
+                    </Text>
+
+                    <!-- Botones -->
+                    <HBox alignment="CENTER" spacing="15">
+                        <Button text="Volver a Conceptos"
+                                onAction="#volverAConceptos"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                        <Button text="Volver al Menú"
+                                onAction="#volverAlMenu"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                    </HBox>
+                </children>
+            </VBox>
+        </children>
+    </VBox>
+</ScrollPane>

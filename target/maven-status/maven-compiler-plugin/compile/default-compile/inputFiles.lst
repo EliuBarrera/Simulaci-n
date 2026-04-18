@@ -3,6 +3,7 @@ C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\Lau
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\Nodo.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\DetallesPdfHandler.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\UnidadDistancia.java
+C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\ConceptosGaussController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\SimuladoresController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\Grafo.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\GeneradorEscena3D.java
@@ -21,11 +22,13 @@ C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\con
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\ResultadoGauss.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\Ventana.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\GaussCalculator.java
+C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\ConceptosFlujoController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\ResultadoCalculo.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\UnifiedFlowController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\ResultadoFuerza.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\TipoFigura.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\module-info.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\AnimacionTabHandler.java
+C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\ConceptosSelectorController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\FiguraGauss.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\CoordenadasTransformador.java

@@ -19,17 +19,20 @@ public class ConceptosController {
             // Cargar imagen desde resources
             Image imagen = new Image(getClass().getResource("/com/usta/views/img/fc.png").toExternalForm());
             fc.setImage(imagen);
-            System.out.println("Imagen cargada correctamente y vista de conceptos iniciada.");
+            System.out.println("Imagen cargada correctamente y vista de conceptos de Coulomb iniciada.");
         } catch (Exception e) {
             System.err.println("Error cargando la imagen: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-          @FXML
-    private void volverAlMenu() throws IOException {
-        App.setRoot("login"); // Asegúrate de que este FXML existe
+    @FXML
+    private void volverAConceptos() throws IOException {
+        App.setRoot("conceptosSelector");
     }
 
-
+    @FXML
+    private void volverAlMenu() throws IOException {
+        App.setRoot("login");
+    }
 }

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.usta.controllers.ConceptosGaussController"
+            fitToWidth="true"
+            styleClass="scroll-pane"
+            stylesheets="@css/Style.css">
+
+    <VBox alignment="TOP_CENTER"
+          spacing="20"
+          prefWidth="1000"
+          styleClass="fondo2"
+          stylesheets="@css/Style.css">
+        <padding>
+            <Insets top="30" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <children>
+            <!-- Título -->
+            <Text text="Conceptos Básicos - Ley de Gauss" styleClass="tituloConceptos">
+                <font>
+                    <Font size="28"/>
+                </font>
+            </Text>
+
+            <!-- Definición principal -->
+            <VBox alignment="TOP_LEFT" spacing="20">
+                <children>
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        La Ley de Gauss es una de las cuatro ecuaciones de Maxwell y establece una relación fundamental entre el flujo eléctrico a través de una superficie cerrada (superficie gaussiana) y la carga eléctrica total encerrada dentro de dicha superficie.
+
+                        Esta ley es especialmente útil para calcular campos eléctricos en situaciones con alta simetría geométrica (esférica, cilíndrica o planar), donde la aplicación directa de la Ley de Coulomb sería más compleja.
+                    </Text>
+
+                    <!-- Fórmula principal -->
+                    <Label text="Φ_E = ∮ E⃗ · dA⃗ = Q_enc / ε₀" styleClass="formulaLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #00695c;"/>
+
+                    <!-- Variables -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        Donde:
+                        • Φ_E es el flujo eléctrico neto a través de la superficie cerrada (en N·m²/C).
+                        • E⃗ es el vector campo eléctrico (en N/C).
+                        • dA⃗ es el vector de área diferencial, perpendicular a la superficie y apuntando hacia afuera.
+                        • Q_enc es la carga eléctrica total encerrada dentro de la superficie gaussiana (en Coulombs).
+                        • ε₀ es la permitividad eléctrica del vacío (8.854 × 10⁻¹² C²/(N·m²)).
+                    </Text>
+
+                    <!-- Conceptos clave -->
+                    <Text text="Conceptos Clave" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        ● Superficie Gaussiana: Es una superficie cerrada hipotética (imaginaria) elegida convenientemente para aprovechar la simetría del problema. No es una superficie física real, sino una herramienta matemática. Se elige de modo que el campo eléctrico sea constante sobre toda la superficie o sobre partes de ella.
+
+                        ● Flujo Eléctrico (Φ_E): Mide la cantidad de líneas de campo eléctrico que atraviesan una superficie. Se calcula como la integral de superficie del producto escalar E⃗ · dA⃗. Un flujo positivo indica que las líneas de campo salen de la superficie; un flujo negativo indica que entran.
+
+                        ● Permitividad del Vacío (ε₀): Es una constante fundamental que relaciona las unidades de carga eléctrica con las de fuerza y distancia. Su valor es ε₀ = 8.854 × 10⁻¹² C²/(N·m²). Aparece tanto en la Ley de Gauss como en la Ley de Coulomb (k = 1/(4πε₀)).
+
+                        ● Simetría Esférica: Para una carga puntual o una distribución de carga esféricamente simétrica, se usa una esfera como superficie gaussiana. El campo eléctrico tiene la misma magnitud en todos los puntos de la esfera y apunta radialmente: E = Q / (4πε₀r²).
+
+                        ● Simetría Cilíndrica: Para un cable largo uniformemente cargado, se usa un cilindro como superficie gaussiana. El campo apunta radialmente hacia afuera del cable: E = λ / (2πε₀r), donde λ es la densidad lineal de carga.
+
+                        ● Simetría Planar: Para una placa infinita uniformemente cargada, se usa un cilindro (caja de pastillas) como superficie gaussiana. El campo es uniforme y perpendicular a la placa: E = σ / (2ε₀), donde σ es la densidad superficial de carga.
+                    </Text>
+
+                    <!-- Relación con Coulomb -->
+                    <Text text="Relación con la Ley de Coulomb" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        La Ley de Gauss y la Ley de Coulomb son equivalentes para cargas estáticas. La Ley de Coulomb es un caso particular que se puede derivar de la Ley de Gauss aplicando una superficie gaussiana esférica alrededor de una carga puntual:
+
+                        • De Gauss: Φ_E = Q / ε₀ → E · (4πr²) = Q / ε₀ → E = Q / (4πε₀r²)
+                        • De Coulomb: F = kQ₁Q₂ / r² = Q₁Q₂ / (4πε₀r²)
+
+                        Ambas conducen al mismo resultado para el campo eléctrico de una carga puntual. Sin embargo, la Ley de Gauss es más general y poderosa porque se aplica a cualquier distribución de carga con simetría adecuada.
+                    </Text>
+
+                    <!-- Botones -->
+                    <HBox alignment="CENTER" spacing="15">
+                        <Button text="Volver a Conceptos"
+                                onAction="#volverAConceptos"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                        <Button text="Volver al Menú"
+                                onAction="#volverAlMenu"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                    </HBox>
+                </children>
+            </VBox>
+        </children>
+    </VBox>
+</ScrollPane>

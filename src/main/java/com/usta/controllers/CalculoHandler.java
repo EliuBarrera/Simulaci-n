@@ -91,7 +91,7 @@ public class CalculoHandler {
             while (estaCalculando && calculoVersion == miVersion) {
                 try {
                     final int v = miVersion;
-                    Platform.runLater(() -> ejecutar(v, modo3D, unidadActual));
+                    Platform.runLater(() -> ejecutar(v, modo3D, unidadDistanciaComboBox.getValue()));
                     Thread.sleep(16);
                 } catch (InterruptedException e) {
                     break;
