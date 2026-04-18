@@ -387,6 +387,11 @@ public class LeyCoulombController {
         modo3DInfoLabel.setVisible(modo3D);
         modo3DInfoLabel.setManaged(modo3D);
 
+        animacionTab.setDisable(modo3D);
+        if (modo3D && tabPanePrincipal.getSelectionModel().getSelectedItem() == animacionTab) {
+            tabPanePrincipal.getSelectionModel().select(0);
+        }
+
         // Mostrar/ocultar campo Z de edición
         if (editCoordZBox != null) {
             editCoordZBox.setVisible(modo3D);

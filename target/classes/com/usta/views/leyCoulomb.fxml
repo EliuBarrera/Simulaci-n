@@ -31,7 +31,7 @@
           <content>
             <AnchorPane prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: #14C5D9;">
               <children>
-                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="600.0" prefWidth="220.0" style="-fx-background-color: transparent; -fx-background: transparent;">
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <content>
                     <VBox prefWidth="200.0" spacing="8" style="-fx-background-color: #14C5D9;">
                       <padding>
@@ -96,20 +96,20 @@
         </Tab>
 
         <!-- ── Rutas ─────────────────────────────────────────────────────── -->
-        <Tab style="-fx-background-color: #8CDFFF;" text="Rutas">
+        <Tab style="-fx-background-color: #8CDFFF;" text="Conexiones">
           <content>
             <AnchorPane prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: #8CDFFF;">
               <children>
-                <VBox layoutX="6.0" layoutY="6.0" prefHeight="541.0" prefWidth="198.0" spacing="10" style="-fx-background-color: #8CDFFF;">
+                <VBox spacing="10" style="-fx-background-color: #8CDFFF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
                   <children>
-                    <Label text="Agregar Ruta" />
+                    <Label text="Conectar Partículas" />
                     <ComboBox fx:id="origenRutaComboBox" prefHeight="54.0" prefWidth="168.0" promptText="Partícula Origen" />
                     <ComboBox fx:id="destinoRutaComboBox" prefHeight="54.0" prefWidth="174.0" promptText="Partícula Destino" />
-                    <Button onAction="#agregarRuta" text="Agregar Ruta" />
+                    <Button onAction="#agregarRuta" text="Conectar Partículas" />
                     <Label text="  " />
                     <Label text="  " />
-                    <Label text="Eliminar Ruta" />
+                    <Label text="Desconectar" />
                     <ComboBox fx:id="eliminarRutaComboBox" promptText="Eliminar Ruta" />
                     <Button fx:id="eliminarRutaButton" onAction="#eliminarRuta" text="Eliminar Ruta" />
                     <Label text=" " />
@@ -125,7 +125,7 @@
           <content>
             <AnchorPane prefHeight="541.0" prefWidth="200.0" style="-fx-background-color: #B3F0FF;">
               <children>
-                <VBox layoutX="6.0" layoutY="8.0" prefHeight="541.0" prefWidth="198.0" spacing="10" style="-fx-background-color: #B3F0FF;">
+                <VBox spacing="10" style="-fx-background-color: #B3F0FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
                   <children>
                     <Label text="Calcular Parámetros" />
@@ -166,7 +166,7 @@
           <content>
             <AnchorPane prefHeight="541.0" prefWidth="200.0" style="-fx-background-color: #D0F5FF;">
               <children>
-                <VBox prefHeight="541.0" prefWidth="220.0" spacing="8" style="-fx-background-color: #D0F5FF;">
+                <VBox spacing="8" style="-fx-background-color: #D0F5FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></padding>
                   <children>
                     <Label style="-fx-font-weight: bold; -fx-font-size: 13px;" text="Cálculos Detallados" />
@@ -181,7 +181,7 @@
                     <Label prefHeight="5" text=" " />
                   </children>
                 </VBox>
-              <Button layoutX="14.0" layoutY="542.0" onAction="#generarPDF" prefWidth="190" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-font-weight: bold;" text="Generar PDF" />
+              <Button onAction="#generarPDF" prefWidth="190" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-font-weight: bold;" text="Generar PDF" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
               </children>
             </AnchorPane>
           </content>
@@ -192,7 +192,7 @@
           <content>
             <AnchorPane prefHeight="541.0" prefWidth="200.0" style="-fx-background-color: #e0f7fa;">
               <children>
-                <VBox prefHeight="541.0" prefWidth="220.0" spacing="10" style="-fx-background-color: #e0f7fa;">
+                <VBox spacing="10" style="-fx-background-color: #e0f7fa;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <padding><Insets bottom="20.0" left="16.0" right="16.0" top="20.0" /></padding>
                   <children>
 
