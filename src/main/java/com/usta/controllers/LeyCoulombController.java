@@ -303,12 +303,9 @@ public class LeyCoulombController {
         generador3D.getCameraPan().yProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
         generador3D.getCamera().translateZProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
     }
-
-
     // =========================================================================
     // ACCIONES FXML — delegan en los handlers
     // =========================================================================
-
     @FXML private void agregarParticula() {
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.agregar(modo3D, t, () -> {
@@ -322,7 +319,6 @@ public class LeyCoulombController {
             }
         });
     }
-
     @FXML private void eliminarParticula() {
         String nombre = particulaEliminarComboBox.getValue();
         if (calculoHandler.estaCalculando() &&
@@ -348,21 +344,18 @@ public class LeyCoulombController {
             rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
         });
     }
-
     @FXML private void agregarRuta() {
         rutaHandler.agregar(modo3D);
         CoordenadasTransformador t = crearTransformador();
         if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
-
     @FXML private void eliminarRuta() {
         rutaHandler.eliminar();
         CoordenadasTransformador t = crearTransformador();
         if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
-
     @FXML private void iniciarCalculo()  { calculoHandler.iniciar(modo3D, unidadActual); }
     @FXML private void cancelarCalculo() { calculoHandler.cancelar(); }
     @FXML private void calcularCampo()   { calculoHandler.ejecutar(calculoHandler.getCalculoVersion(), modo3D, unidadActual); }
@@ -458,7 +451,6 @@ public class LeyCoulombController {
             scrollPane.setVmax(1.0);
         }
     }
-
     @FXML private void onAnimacionTabSeleccionada(Event e) {
         animacionHandler.onTabSeleccionada(
             ultimoResultado, unidadActual, grafoPane, nodoCirculos,
@@ -557,8 +549,6 @@ public class LeyCoulombController {
             }
         }
     }
-
-
     private void updateLabel3D(Text txt, double x, double y, double z) {
         javafx.geometry.Point3D p3d = generador3D.getWorld().localToScene(x, y, z);
         javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
@@ -567,7 +557,6 @@ public class LeyCoulombController {
             txt.setY(pLocal.getY() - 5);
         }
     }
-
     /**
      * Recalcula la posición de pantalla de todas las partículas
      * a partir de sus coordenadas lógicas.
@@ -602,7 +591,6 @@ public class LeyCoulombController {
                 });
         }
     }
-
     /**
      * Hace arrastrable un nodo en el plano.
      *
@@ -678,7 +666,6 @@ public class LeyCoulombController {
 
         circulo.setOnMouseEntered(me -> circulo.setCursor(Cursor.HAND));
     }
-
     // =========================================================================
     // ENLACE DE CAMPOS FXML A HANDLERS
     // =========================================================================
@@ -713,11 +700,9 @@ public class LeyCoulombController {
         calculoHandler.resultadoFuerzaLabel       = resultadoFuerzaLabel;
         calculoHandler.resultadoCampoLabel        = resultadoCampoLabel;
     }
-
     private void enlazarCamposDetalles() {
         detallesPdfHandler.calculosDetalladosTextArea = calculosDetalladosTextArea;
     }
-
     private void enlazarCamposAnimacion() {
         animacionHandler.animacionTab         = animacionTab;
         animacionHandler.pasoIndicadorLabel   = pasoIndicadorLabel;
@@ -728,7 +713,6 @@ public class LeyCoulombController {
         animacionHandler.btnReiniciarAnimacion = btnReiniciarAnimacion;
         animacionHandler.btnDetenerAnimacion  = btnDetenerAnimacion;
     }
-
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert a = new Alert(Alert.AlertType.ERROR);
         a.setTitle(titulo); a.setHeaderText(" "); a.setContentText(mensaje);
