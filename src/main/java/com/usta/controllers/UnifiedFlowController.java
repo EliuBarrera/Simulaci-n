@@ -12,14 +12,10 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-
 public class UnifiedFlowController {
 
     // ── FXML nodes ────────────────────────────────────────────────────────────
@@ -31,9 +27,9 @@ public class UnifiedFlowController {
     @FXML private TextField radioTextField;
     @FXML private TextField angleTextField;
 
-    @FXML private Text baseLabel;
-    @FXML private Text heightLabel;
-    @FXML private Text radioLabel;
+    @FXML private Label baseLabel;
+    @FXML private Label heightLabel;
+    @FXML private Label radioLabel;
 
     @FXML private Slider angleSlider;
     @FXML private Slider sizeSlider;
@@ -44,11 +40,7 @@ public class UnifiedFlowController {
 
     @FXML private Canvas    cartesianCanvas;
     @FXML private Pane      canvasPane;
-    @FXML private ImageView campoElectricoImgView;
 
-    @FXML private ImageView rectangleImgView;
-    @FXML private ImageView triangleImgView;
-    @FXML private ImageView sphereImgView;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private boolean simulationActive = false;
@@ -86,11 +78,6 @@ public class UnifiedFlowController {
     @FXML
     public void initialize() {
 
-        Image bgImage = new Image(
-            getClass().getResource("/com/usta/views/img/CampoElectrico.png").toExternalForm()
-        );
-        campoElectricoImgView.setImage(bgImage);
-
         figuraComboBox.getItems().addAll("Rectángulo", "Triángulo", "Circunferencia");
         figuraComboBox.getSelectionModel().selectFirst();
         applyFiguraLayout("Rectángulo");
@@ -98,12 +85,10 @@ public class UnifiedFlowController {
         // ── Canvas resizes with pane (fix: always fill pane, never shrink-lock) ──
         canvasPane.widthProperty().addListener((obs, o, n) -> {
             cartesianCanvas.setWidth(n.doubleValue());
-            campoElectricoImgView.setFitWidth(n.doubleValue());
             redraw();
         });
         canvasPane.heightProperty().addListener((obs, o, n) -> {
             cartesianCanvas.setHeight(n.doubleValue());
-            campoElectricoImgView.setFitHeight(n.doubleValue());
             redraw();
         });
 
@@ -115,7 +100,7 @@ public class UnifiedFlowController {
             syncingAngle = true;
             angleTextField.setText(String.valueOf(angle));
             syncingAngle = false;
-            updateFigureRotation(angle);
+            redraw();
             if (simulationActive) tryAutoCalculate();
         });
 
@@ -129,7 +114,7 @@ public class UnifiedFlowController {
                     angleSlider.setValue(v);
                     angleSliderLabel.setText((int) v + "°");
                     syncingAngle = false;
-                    updateFigureRotation(v);
+                    redraw();
                 }
             } catch (NumberFormatException ignored) {}
             if (simulationActive) tryAutoCalculate();
@@ -142,12 +127,12 @@ public class UnifiedFlowController {
             sizeSliderLabel.setText(String.format(Locale.US, "×%.1f", scale));
             
             syncingSize = true;
-            applyScale(scale);   // writes fields + resizes figure
+            applyScale(scale);   // writes fields + visual redraw
             syncingSize = false;
             if (simulationActive) tryAutoCalculate();
         });
 
-        applyFigureSize(BASE_PX * 5.5);
+        redraw();
     }
 
     // ══ "Calcular Flujo" button ════════════════════════════════════════════════
@@ -182,7 +167,7 @@ public class UnifiedFlowController {
                 heightTextField.setText(String.format(new Locale("es", "CO"), "%.4f", heightValueAtStart * scale));
                 break;
         }
-        applyFigureSize(BASE_PX * scale);
+        redraw();
     }
 
     // ══ ComboBox ══════════════════════════════════════════════════════════════
@@ -195,19 +180,19 @@ public class UnifiedFlowController {
         hasResult    = false;
         flowTextField.setText("--");
         
-        resetAllRotations();
         baseValueAtStart = 1.0; heightValueAtStart = 1.0; radioValueAtStart = 1.0;
-        syncingSize = true;
+        syncingAngle = true; syncingSize = true;
+        angleSlider.setValue(0);
+        angleTextField.setText("0");
+        angleSliderLabel.setText("0°");
         sizeSlider.setValue(5.5);
-        syncingSize = false;
+        syncingAngle = false; syncingSize = false;
         sizeSliderLabel.setText(String.format(Locale.US, "×%.1f", 5.5));
-        applyFigureSize(BASE_PX * 5.5);
+        redraw();
     }
 
     private void applyFiguraLayout(String figura) {
         boolean isCircle    = "Circunferencia".equals(figura);
-        boolean isRectangle = "Rectángulo".equals(figura);
-        boolean isTriangle  = "Triángulo".equals(figura);
 
         setVisible(baseLabel,       !isCircle);
         setVisible(baseTextField,   !isCircle);
@@ -215,10 +200,8 @@ public class UnifiedFlowController {
         setVisible(heightTextField, !isCircle);
         setVisible(radioLabel,      isCircle);
         setVisible(radioTextField,  isCircle);
-
-        setVisible(rectangleImgView, isRectangle);
-        setVisible(triangleImgView,  isTriangle);
-        setVisible(sphereImgView,    isCircle);
+        
+        redraw();
     }
 
     private void setVisible(javafx.scene.Node node, boolean show) {
@@ -298,6 +281,9 @@ public class UnifiedFlowController {
         GraphicsContext gc = cartesianCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, W, H);
 
+        // ── Fondo: patrón de Campo Eléctrico ─────────────────────────
+        drawElectricFieldArrows(gc, W, H);
+
         // ── Grid cuadrada ─────────────────────────────────────────────────────
         // El paso de celda se basa en el eje más corto para que las celdas
         // sean siempre cuadradas independientemente del aspect-ratio del canvas.
@@ -340,10 +326,104 @@ public class UnifiedFlowController {
         gc.setFill(Color.rgb(100, 118, 255));
         gc.fillOval(cx - 4, cy - 4, 8, 8);
 
-        centerFigure();
+        // ── Shape ────────────────────────────────────────────────────────────
+        drawShape(gc, cx, cy);
 
         // ── Popup de cálculo ─────────────────────────────────────────────────
         if (hasResult) drawCalcPopup(gc, W, H);
+    }
+
+    private void drawElectricFieldArrows(GraphicsContext gc, double W, double H) {
+        gc.setStroke(Color.rgb(0, 150, 255, 0.4)); // Celeste semi-transparente
+        gc.setFill(Color.rgb(0, 150, 255, 0.4));
+        gc.setLineWidth(2.0);
+        
+        double arrowLen = 12.0;
+        double spacingX = 60.0;
+        double spacingY = 60.0;
+        
+        for (double y = spacingY / 2; y < H; y += spacingY) {
+            for (double x = spacingX / 2; x < W; x += spacingX) {
+                gc.strokeLine(x - 15, y, x + 15, y);
+                fillArrow(gc, x + 15, y, 0, arrowLen);
+            }
+        }
+    }
+
+    private void drawShape(GraphicsContext gc, double cx, double cy) {
+        String figura = figuraComboBox.getValue();
+        if (figura == null) return;
+        
+        double angle = 0.0;
+        try {
+            angle = parseDoubleLocal(angleTextField.getText());
+        } catch (Exception ignored) {}
+
+        double sizeFactor = sizeSlider.getValue();
+        double wArea = 16.0 * sizeFactor;
+        double hArea = 24.0 * sizeFactor;
+
+        gc.save();
+        gc.translate(cx, cy);
+        gc.rotate(-angle);
+
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(4.0);
+        gc.setFill(Color.rgb(255, 255, 255, 0.4)); // Transparente claro en medio
+
+        switch (figura) {
+            case "Circunferencia":
+                double rW = wArea * 0.4;
+                double rH = hArea / 1.5;
+                gc.fillOval(-rW, -rH, rW*2, rH*2);
+                gc.strokeOval(-rW, -rH, rW*2, rH*2);
+                break;
+            case "Triángulo":
+                double skewYTri = hArea * 0.15;
+                double planeWTri = wArea * 0.4;
+                gc.fillPolygon(
+                    new double[] { -planeWTri, planeWTri, 0 }, 
+                    new double[] { hArea/2 + skewYTri, hArea/2 - skewYTri, -hArea/2 }, 
+                    3
+                );
+                gc.strokePolygon(
+                    new double[] { -planeWTri, planeWTri, 0 }, 
+                    new double[] { hArea/2 + skewYTri, hArea/2 - skewYTri, -hArea/2 }, 
+                    3
+                );
+                break;
+            default: // Rectángulo
+                double skewY = hArea * 0.15;
+                double planeW = wArea * 0.4;
+                gc.fillPolygon(
+                    new double[] { -planeW,   planeW,   planeW, -planeW }, 
+                    new double[] { -hArea/2 + skewY, -hArea/2 - skewY, hArea/2 - skewY, hArea/2 + skewY }, 
+                    4
+                );
+                gc.strokePolygon(
+                    new double[] { -planeW,   planeW,   planeW, -planeW }, 
+                    new double[] { -hArea/2 + skewY, -hArea/2 - skewY, hArea/2 - skewY, hArea/2 + skewY }, 
+                    4
+                );
+                break;
+        }
+
+        // Vector de Área
+        gc.setStroke(Color.rgb(255, 50, 50));
+        gc.setFill(Color.rgb(255, 50, 50));
+        gc.setLineWidth(4.0);
+        
+        double vectorLen = wArea * 0.8 + 20; 
+        gc.strokeLine(0, 0, vectorLen, 0);
+        fillArrow(gc, vectorLen, 0, 0, 15);
+        
+        gc.setFont(Font.font("System", FontWeight.BOLD, 18));
+        gc.fillText("A", vectorLen - 10, -10);
+        gc.setLineWidth(1.5);
+        gc.strokeLine(vectorLen - 10, -25, vectorLen + 2, -25);
+        fillArrow(gc, vectorLen + 2, -25, 0, 5);
+
+        gc.restore();
     }
 
     /**
@@ -438,41 +518,6 @@ public class UnifiedFlowController {
         gc.fillPolygon(new double[]{ax, bx, cx2}, new double[]{ay, by, cy2}, 3);
     }
 
-    // ══ Figure helpers ════════════════════════════════════════════════════════
-    private void centerFigure() {
-        ImageView iv = activeImgView();
-        double cx = cartesianCanvas.getWidth()  / 2.0;
-        double cy = cartesianCanvas.getHeight() / 2.0;
-        iv.setLayoutX(cx - iv.getFitWidth()  / 2.0);
-        iv.setLayoutY(cy - iv.getFitHeight() / 2.0);
-    }
-
-    private void applyFigureSize(double px) {
-        ImageView iv = activeImgView();
-        iv.setFitHeight(px);
-        iv.setFitWidth(px);
-        centerFigure();
-    }
-
-    private void updateFigureRotation(double angle) {
-        activeImgView().setRotate(-angle);
-    }
-
-    private void resetAllRotations() {
-        rectangleImgView.setRotate(0);
-        triangleImgView .setRotate(0);
-        sphereImgView   .setRotate(0);
-    }
-
-    private ImageView activeImgView() {
-        String figura = figuraComboBox.getValue();
-        if (figura == null) return rectangleImgView;
-        switch (figura) {
-            case "Triángulo":      return triangleImgView;
-            case "Circunferencia": return sphereImgView;
-            default:               return rectangleImgView;
-        }
-    }
 
     // ══ Restart ═══════════════════════════════════════════════════════════════
     @FXML
@@ -487,15 +532,15 @@ public class UnifiedFlowController {
         heightTextField.clear();
         radioTextField .clear();
         angleTextField .clear();
-        resetAllRotations();
         syncingAngle = true; syncingSize = true;
+        angleTextField .setText("0");
         angleSlider.setValue(0);
         sizeSlider.setValue(5.5);
         syncingAngle = false; syncingSize = false;
         angleSliderLabel.setText("0°");
         sizeSliderLabel.setText(String.format(Locale.US, "×%.1f", 5.5));
-        applyFigureSize(BASE_PX * 5.5);
         flowTextField.setText("--");
+        redraw();
     }
 
     // ══ Navigation ════════════════════════════════════════════════════════════
