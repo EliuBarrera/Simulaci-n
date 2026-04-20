@@ -549,14 +549,6 @@ public class LeyCoulombController {
             }
         }
     }
-    private void updateLabel3D(Text txt, double x, double y, double z) {
-        javafx.geometry.Point3D p3d = generador3D.getWorld().localToScene(x, y, z);
-        javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
-        if (pLocal != null) {
-            txt.setX(pLocal.getX() + 5);
-            txt.setY(pLocal.getY() - 5);
-        }
-    }
     /**
      * Recalcula la posición de pantalla de todas las partículas
      * a partir de sus coordenadas lógicas.
