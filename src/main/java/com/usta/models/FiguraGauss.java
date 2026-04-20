@@ -14,23 +14,26 @@ package com.usta.models;
 public class FiguraGauss {
 
     private TipoFigura tipo;
-    private double cx, cy;       // centro en píxeles
+    private double cx, cy, cz;   // centro espacial
     private double param1;       // radio / semiancho / semilado / semibase
     private double param2;       // semialto / altura (para rect y tri)
+    private double param3;       // profundidad / altura 3D
 
     // Solo para figuras cargadas
     private double cargaTotal;   // en µC
     private String signo;        // "+" o "-"
     private String nombre;
 
-    public FiguraGauss(TipoFigura tipo, double cx, double cy,
-                        double param1, double param2,
+    public FiguraGauss(TipoFigura tipo, double cx, double cy, double cz,
+                        double param1, double param2, double param3,
                         double cargaTotal, String signo, String nombre) {
         this.tipo       = tipo;
         this.cx         = cx;
         this.cy         = cy;
+        this.cz         = cz;
         this.param1     = param1;
         this.param2     = param2;
+        this.param3     = param3;
         this.cargaTotal = cargaTotal;
         this.signo      = signo;
         this.nombre     = nombre;
@@ -39,72 +42,102 @@ public class FiguraGauss {
     // ── Geometría ────────────────────────────────────────────────────────────
 
     /**
-     * Retorna el área de la figura en unidades reales (unidad²).
-     * Se usa solo para referencia; el flujo se calcula con Q_int / ε₀.
+     * Retorna el área o volumen de la figura en unidades reales.
+     * Se usa para cálculo referencial y Densidad de Carga.
      */
-    public double calcularArea(double pxPorUnidad) {
+    public double calcularMagnitudEspacial(double pxPorUnidad) {
+        double p1u = param1 / pxPorUnidad;
+        double p2u = param2 / pxPorUnidad;
+        double p3u = param3 / pxPorUnidad;
+
         return switch (tipo) {
-            case CIRCULO    -> Math.PI * Math.pow(param1 / pxPorUnidad, 2);
-            case RECTANGULO -> (2 * param1 / pxPorUnidad) * (2 * param2 / pxPorUnidad);
-            case CUADRADO   -> Math.pow(2 * param1 / pxPorUnidad, 2);
-            case TRIANGULO  -> 0.5 * (2 * param1 / pxPorUnidad) * (param2 / pxPorUnidad);
+            case CIRCULO    -> Math.PI * Math.pow(p1u, 2);
+            case RECTANGULO -> (2 * p1u) * (2 * p2u);
+            case CUADRADO   -> Math.pow(2 * p1u, 2);
+            case TRIANGULO  -> 0.5 * (2 * p1u) * p2u;
+            case ESFERA     -> (4.0/3.0) * Math.PI * Math.pow(p1u, 3);
+            case CILINDRO   -> Math.PI * Math.pow(p1u, 2) * p2u; // param2 = altura
+            case CAJA       -> (2 * p1u) * (2 * p2u) * (2 * p3u);
         };
     }
 
     /**
-     * Calcula el perímetro / longitud de la superficie en 2D (unidad lineal).
-     * En 2D, la "superficie gaussiana" es una curva cerrada; el "área" es el perímetro.
+     * Calcula el perímetro / longitud / área perimetral de la superficie.
      */
     public double calcularPerimetro(double pxPorUnidad) {
+        double p1u = param1 / pxPorUnidad;
+        double p2u = param2 / pxPorUnidad;
+        double p3u = param3 / pxPorUnidad;
+
         return switch (tipo) {
-            case CIRCULO    -> 2 * Math.PI * (param1 / pxPorUnidad);
-            case RECTANGULO -> 2 * (2 * param1 / pxPorUnidad + 2 * param2 / pxPorUnidad);
-            case CUADRADO   -> 4 * (2 * param1 / pxPorUnidad);
+            case CIRCULO    -> 2 * Math.PI * p1u;
+            case RECTANGULO -> 2 * (2 * p1u + 2 * p2u);
+            case CUADRADO   -> 4 * (2 * p1u);
             case TRIANGULO  -> {
-                double b = 2 * param1 / pxPorUnidad;
-                double h = param2 / pxPorUnidad;
-                double lado = Math.hypot(param1 / pxPorUnidad, h);
+                double b = 2 * p1u;
+                double h = p2u;
+                double lado = Math.hypot(p1u, h);
                 yield b + 2 * lado;
             }
+            case ESFERA     -> 4 * Math.PI * Math.pow(p1u, 2); // area superficial
+            case CILINDRO   -> 2 * Math.PI * p1u * (p1u + p2u); // area superficial
+            case CAJA       -> 2 * ((2*p1u)*(2*p2u) + (2*p1u)*(2*p3u) + (2*p2u)*(2*p3u)); // area superficial
         };
     }
 
     /**
-     * Determina si un punto (px, py) en píxeles está dentro de esta figura.
-     * Se usa para calcular qué fracción de la figura cargada queda dentro
-     * de la superficie gaussiana.
+     * Determina si un punto (px, py, pz) está dentro de esta figura.
      */
-    public boolean contienePunto(double px, double py) {
+    public boolean contienePunto(double px, double py, double pz) {
         return switch (tipo) {
-            case CIRCULO   -> Math.hypot(px - cx, py - cy) <= param1;
-            case CUADRADO  -> Math.abs(px - cx) <= param1 && Math.abs(py - cy) <= param1;
-            case RECTANGULO -> Math.abs(px - cx) <= param1 && Math.abs(py - cy) <= param2;
+            case CIRCULO   -> Math.hypot(px - cx, py - cy) <= param1 && Math.abs(pz - cz) <= 0.01; // Como es 2D asume grosor ~0
+            case CUADRADO  -> Math.abs(px - cx) <= param1 && Math.abs(py - cy) <= param1 && Math.abs(pz - cz) <= 0.01;
+            case RECTANGULO -> Math.abs(px - cx) <= param1 && Math.abs(py - cy) <= param2 && Math.abs(pz - cz) <= 0.01;
             case TRIANGULO -> {
-                // Triángulo isósceles: base centrada en cx, vértice arriba
-                double topY    = cy - param2;       // vértice superior (en px, Y+ abajo)
-                double relY    = py - topY;         // distancia desde el vértice
+                double topY    = cy - param2; 
+                double relY    = py - topY;   
                 double altura  = param2;
                 if (relY < 0 || relY > altura) yield false;
                 double semiancho = param1 * (relY / altura);
-                yield Math.abs(px - cx) <= semiancho;
+                yield Math.abs(px - cx) <= semiancho && Math.abs(pz - cz) <= 0.01;
+            }
+            case ESFERA -> {
+                double dx = px - cx; double dy = py - cy; double dz = pz - cz;
+                yield (dx*dx + dy*dy + dz*dz) <= (param1*param1);
+            }
+            case CILINDRO -> {
+                double dx = px - cx; double dz = pz - cz;
+                boolean inCircle = (dx*dx + dz*dz) <= (param1*param1); // cilindro orientado en Y
+                boolean inHeight = Math.abs(py - cy) <= (param2 / 2.0); // cilindro centrado en Y
+                yield inCircle && inHeight;
+            }
+            case CAJA -> {
+                yield Math.abs(px - cx) <= param1 && Math.abs(py - cy) <= param2 && Math.abs(pz - cz) <= param3;
             }
         };
     }
+    
+    public boolean contienePunto(double px, double py) {
+        return contienePunto(px, py, this.cz);
+    }
 
-    // ── Getters / Setters ─────────────────────────────────────────────────────
     public TipoFigura getTipo()        { return tipo; }
     public double getCx()              { return cx; }
     public double getCy()              { return cy; }
+    public double getCz()              { return cz; }
     public double getParam1()          { return param1; }
     public double getParam2()          { return param2; }
+    public double getParam3()          { return param3; }
     public double getCargaTotal()      { return cargaTotal; }
     public String getSigno()           { return signo; }
     public String getNombre()          { return nombre; }
 
     public void setCx(double cx)       { this.cx = cx; }
     public void setCy(double cy)       { this.cy = cy; }
+    public void setCz(double cz)       { this.cz = cz; }
     public void setParam1(double p)    { this.param1 = p; }
     public void setParam2(double p)    { this.param2 = p; }
+    public void setParam3(double p)    { this.param3 = p; }
     public void setCargaTotal(double c){ this.cargaTotal = c; }
     public void setSigno(String s)     { this.signo = s; }
     public void setNombre(String n)    { this.nombre = n; }

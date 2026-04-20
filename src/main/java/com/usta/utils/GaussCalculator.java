@@ -50,9 +50,10 @@ public class GaussCalculator {
      */
     private double calcularFraccionEncerrada(FiguraGauss figura,
                                               FiguraGauss superficie) {
-        // Bounding box de la figura cargada
+        // Bounding box de la figura cargada (3D)
         double[] bb  = boundingBox(figura);
-        double minX = bb[0], minY = bb[1], maxX = bb[2], maxY = bb[3];
+        double minX = bb[0], minY = bb[1], minZ = bb[2];
+        double maxX = bb[3], maxY = bb[4], maxZ = bb[5];
 
         int dentroFigura     = 0;
         int dentroAmbos      = 0;
@@ -62,10 +63,11 @@ public class GaussCalculator {
         for (int i = 0; i < MUESTRAS_MC; i++) {
             double px = minX + rng.nextDouble() * (maxX - minX);
             double py = minY + rng.nextDouble() * (maxY - minY);
+            double pz = minZ + rng.nextDouble() * (maxZ - minZ);
 
-            if (figura.contienePunto(px, py)) {
+            if (figura.contienePunto(px, py, pz)) {
                 dentroFigura++;
-                if (superficie.contienePunto(px, py)) {
+                if (superficie.contienePunto(px, py, pz)) {
                     dentroAmbos++;
                 }
             }
@@ -76,16 +78,20 @@ public class GaussCalculator {
     }
 
     /**
-     * Retorna el bounding box (minX, minY, maxX, maxY) en píxeles de una figura.
+     * Retorna el bounding box (minX, minY, minZ, maxX, maxY, maxZ) en píxeles de una figura.
      */
     private double[] boundingBox(FiguraGauss f) {
-        double cx = f.getCx(), cy = f.getCy();
-        double p1 = f.getParam1(), p2 = f.getParam2();
+        double cx = f.getCx(), cy = f.getCy(), cz = f.getCz();
+        double p1 = f.getParam1(), p2 = f.getParam2(), p3 = f.getParam3();
+        double d = 0.01; // Para figuras 2D
         return switch (f.getTipo()) {
-            case CIRCULO    -> new double[]{ cx-p1, cy-p1, cx+p1, cy+p1 };
-            case CUADRADO   -> new double[]{ cx-p1, cy-p1, cx+p1, cy+p1 };
-            case RECTANGULO -> new double[]{ cx-p1, cy-p2, cx+p1, cy+p2 };
-            case TRIANGULO  -> new double[]{ cx-p1, cy-p2, cx+p1, cy      };
+            case CIRCULO    -> new double[]{ cx-p1, cy-p1, cz-d, cx+p1, cy+p1, cz+d };
+            case CUADRADO   -> new double[]{ cx-p1, cy-p1, cz-d, cx+p1, cy+p1, cz+d };
+            case RECTANGULO -> new double[]{ cx-p1, cy-p2, cz-d, cx+p1, cy+p2, cz+d };
+            case TRIANGULO  -> new double[]{ cx-p1, cy-p2, cz-d, cx+p1, cy,    cz+d };
+            case ESFERA     -> new double[]{ cx-p1, cy-p1, cz-p1, cx+p1, cy+p1, cz+p1 };
+            case CILINDRO   -> new double[]{ cx-p1, cy-p2/2, cz-p1, cx+p1, cy+p2/2, cz+p1 };
+            case CAJA       -> new double[]{ cx-p1, cy-p2, cz-p3, cx+p1, cy+p2, cz+p3 };
         };
     }
 }

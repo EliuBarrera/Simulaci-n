@@ -1,6 +1,7 @@
 com\usta\controllers\LeyGaussController$Modo.class
 com\usta\controllers\MenuController.class
 com\usta\models\Arista.class
+com\usta\controllers\ConceptosController.class
 com\usta\controllers\LeyCoulombController.class
 com\usta\controllers\UnifiedFlowController.class
 com\usta\controllers\AnimacionCoulombController.class

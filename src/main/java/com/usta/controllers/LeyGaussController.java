@@ -13,6 +13,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -66,7 +68,28 @@ public class LeyGaussController {
     @FXML private Button    btnCalcular;
     @FXML private Button    btnLimpiar;
     @FXML private CheckBox  chkLineasCampo;
+    @FXML private ScrollPane gaussScrollPane;
 
+    // Panel 3D Extra
+    @FXML private CheckBox chkModo3D;
+    @FXML private RadioButton optCargaExacta;
+    @FXML private RadioButton optDensidad;
+    @FXML private Label lblCargaInfo;
+    @FXML private VBox panelDimensiones3DFigura;
+    @FXML private TextField figCxField;
+    @FXML private TextField figCyField;
+    @FXML private TextField figCzField;
+    @FXML private TextField figP1Field;
+    @FXML private TextField figP2Field;
+    @FXML private TextField figP3Field;
+    @FXML private VBox panelDimensiones3DSuperficie;
+    @FXML private TextField supCxField;
+    @FXML private TextField supCyField;
+    @FXML private TextField supCzField;
+    @FXML private TextField supP1Field;
+    @FXML private TextField supP2Field;
+    @FXML private TextField supP3Field;
+    
     // Panel resultados
     @FXML private Label     lblQenc;
     @FXML private Label     lblFlujo;
@@ -97,6 +120,11 @@ public class LeyGaussController {
     // Contadores para nombres
     private int contadorFiguras = 1;
 
+    // 3D
+    private boolean modo3D = false;
+    private ToggleGroup toggleCargaGroup;
+    private com.usta.utils.GeneradorEscena3D generador3D;
+
     // =========================================================================
     // INICIALIZACIÓN
     // =========================================================================
@@ -122,10 +150,32 @@ public class LeyGaussController {
         canvasGauss.setOnMouseMoved(this::onMouseMoved);
 
         // CheckBox líneas de campo
-        chkLineasCampo.selectedProperty().addListener((obs, o, n) -> redibujar());
+        chkLineasCampo.selectedProperty().addListener((obs, o, n) -> {
+            if (modo3D) dibujarEscena3D(); else redibujar();
+        });
+
+        toggleCargaGroup = new ToggleGroup();
+        if (optCargaExacta != null) {
+            optCargaExacta.setToggleGroup(toggleCargaGroup);
+            optDensidad.setToggleGroup(toggleCargaGroup);
+            toggleCargaGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+                if (optCargaExacta.isSelected()) lblCargaInfo.setText("Carga Q (µC):");
+                else lblCargaInfo.setText("Densidad (µC/m, m², m³):");
+            });
+        }
+
+        if (gaussPane != null && gaussScrollPane != null) {
+            generador3D = new com.usta.utils.GeneradorEscena3D(1000, 800);
+            generador3D.getSubScene().widthProperty().bind(gaussScrollPane.widthProperty().subtract(2));
+            generador3D.getSubScene().heightProperty().bind(gaussScrollPane.heightProperty().subtract(2));
+            generador3D.getSubScene().setVisible(false);
+            generador3D.getSubScene().setManaged(false);
+            gaussPane.getChildren().add(0, generador3D.getSubScene());
+        }
 
         // Estado inicial
         actualizarEstadoBotones();
+        onToggleModo3D();
         dibujar(null, null);
     }
 
@@ -133,19 +183,62 @@ public class LeyGaussController {
     // ACCIONES DEL PANEL LATERAL
     // =========================================================================
 
+    @FXML
+    private void onToggleModo3D() {
+        if (chkModo3D == null) return;
+        modo3D = chkModo3D.isSelected();
+        panelDimensiones3DFigura.setVisible(modo3D);
+        panelDimensiones3DFigura.setManaged(modo3D);
+        panelDimensiones3DSuperficie.setVisible(modo3D);
+        panelDimensiones3DSuperficie.setManaged(modo3D);
+
+        figuraCargadaCombo.getItems().clear();
+        superficieCombo.getItems().clear();
+        if (modo3D) {
+            figuraCargadaCombo.getItems().addAll(TipoFigura.values());
+            superficieCombo.getItems().addAll(TipoFigura.ESFERA, TipoFigura.CILINDRO, TipoFigura.CAJA);
+            if(btnConfirmarFigura != null) btnConfirmarFigura.setText("Confirmar figura 3D");
+            if(btnConfirmarSuperficie != null) btnConfirmarSuperficie.setText("Confirmar superficie 3D");
+            canvasGauss.setVisible(false);
+            canvasGauss.setManaged(false);
+            generador3D.getSubScene().setVisible(true);
+            generador3D.getSubScene().setManaged(true);
+            generador3D.resetCamera();
+            if(gaussScrollPane != null) gaussScrollPane.setPannable(false);
+        } else {
+            figuraCargadaCombo.getItems().addAll(TipoFigura.CIRCULO, TipoFigura.RECTANGULO, TipoFigura.CUADRADO, TipoFigura.TRIANGULO);
+            superficieCombo.getItems().addAll(TipoFigura.CIRCULO, TipoFigura.RECTANGULO, TipoFigura.CUADRADO, TipoFigura.TRIANGULO);
+            if(btnConfirmarFigura != null) btnConfirmarFigura.setText("Dibujar figura →");
+            if(btnConfirmarSuperficie != null) btnConfirmarSuperficie.setText("Dibujar superficie →");
+            canvasGauss.setVisible(true);
+            canvasGauss.setManaged(true);
+            generador3D.getSubScene().setVisible(false);
+            generador3D.getSubScene().setManaged(false);
+            if(gaussScrollPane != null) gaussScrollPane.setPannable(true);
+        }
+        figuraCargadaCombo.getSelectionModel().selectFirst();
+        superficieCombo.getSelectionModel().selectFirst();
+        onLimpiar();
+    }
+
     /** El usuario quiere dibujar la figura cargada. */
     @FXML
     private void onIniciarDibujoFigura() {
+        if (modo3D) {
+            crearFigura3DDirecto();
+            return;
+        }
+
         String cargaStr = cargaField.getText().trim();
         if (cargaStr.isEmpty()) {
-            mostrarAlerta("Falta dato", "Ingrese el valor de la carga antes de dibujar.");
+            mostrarAlerta("Falta dato", "Ingrese el valor antes de dibujar.");
             return;
         }
         try {
             double q = Double.parseDouble(cargaStr);
-            if (q <= 0) { mostrarAlerta("Error", "La carga debe ser un valor positivo."); return; }
+            if (q <= 0) { mostrarAlerta("Error", "El valor debe ser positivo."); return; }
         } catch (NumberFormatException e) {
-            mostrarAlerta("Error", "La carga debe ser un número válido."); return;
+            mostrarAlerta("Error", "Debe ser un número válido."); return;
         }
 
         modoActual      = Modo.DIBUJANDO_FIGURA;
@@ -157,6 +250,10 @@ public class LeyGaussController {
     /** El usuario quiere dibujar la superficie gaussiana. */
     @FXML
     private void onIniciarDibujoSuperficie() {
+        if (modo3D) {
+            crearSuperficie3DDirecto();
+            return;
+        }
         if (figuraCargada == null) {
             mostrarAlerta("Sin figura", "Primero confirma la figura cargada.");
             return;
@@ -165,6 +262,126 @@ public class LeyGaussController {
         esperandoDibujo = true;
         lblEstadoSuperficie.setText("Dibuja la superficie en el plano →");
         canvasGauss.setCursor(Cursor.CROSSHAIR);
+    }
+
+    private void crearFigura3DDirecto() {
+        try {
+            double cargaDensidadVal = Double.parseDouble(cargaField.getText().trim());
+            if (cargaDensidadVal <= 0) { mostrarAlerta("Error", "El valor debe ser positivo."); return; }
+            
+            double cx = Double.parseDouble(figCxField.getText().trim());
+            double cy = Double.parseDouble(figCyField.getText().trim());
+            double cz = Double.parseDouble(figCzField.getText().trim());
+            double p1 = Double.parseDouble(figP1Field.getText().trim());
+            double p2 = figP2Field.getText().trim().isEmpty() ? 0 : Double.parseDouble(figP2Field.getText().trim());
+            double p3 = figP3Field.getText().trim().isEmpty() ? 0 : Double.parseDouble(figP3Field.getText().trim());
+            
+            TipoFigura tipo = figuraCargadaCombo.getValue();
+            String s = signoCargaCombo.getValue();
+            double pxPorUnit = PX_POR_UNIT;
+            
+            double p1_px = p1 * pxPorUnit;
+            double p2_px = p2 * pxPorUnit;
+            double p3_px = p3 * pxPorUnit;
+            
+            FiguraGauss temporal = new FiguraGauss(tipo, 0, 0, 0, p1_px, p2_px, p3_px, 0, "+", "");
+            double cargaTotal;
+            if (optCargaExacta.isSelected()) {
+                cargaTotal = cargaDensidadVal;
+            } else {
+                double dim = temporal.calcularMagnitudEspacial(pxPorUnit);
+                cargaTotal = cargaDensidadVal * dim;
+            }
+            
+            figuraCargada = new FiguraGauss(tipo, cx * pxPorUnit, cy * pxPorUnit, cz * pxPorUnit, p1_px, p2_px, p3_px, cargaTotal, s, "F" + contadorFiguras++);
+            figuraConfirmada = true;
+            lblEstadoFigura.setText("✔ Figura: " + tipo + " | Q=" + String.format("%.2f", cargaTotal) + " µC");
+            actualizarEstadoBotones();
+            dibujarEscena3D();
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "Ingresa dimensiones numéricas válidas.");
+        }
+    }
+
+    private void crearSuperficie3DDirecto() {
+        if (figuraCargada == null) { mostrarAlerta("Error", "Primero confirma la figura cargada."); return; }
+        try {
+            double cx = Double.parseDouble(supCxField.getText().trim());
+            double cy = Double.parseDouble(supCyField.getText().trim());
+            double cz = Double.parseDouble(supCzField.getText().trim());
+            double p1 = Double.parseDouble(supP1Field.getText().trim());
+            double p2 = supP2Field.getText().trim().isEmpty() ? 0 : Double.parseDouble(supP2Field.getText().trim());
+            double p3 = supP3Field.getText().trim().isEmpty() ? 0 : Double.parseDouble(supP3Field.getText().trim());
+            
+            TipoFigura tipo = superficieCombo.getValue();
+            double pxPorUnit = PX_POR_UNIT;
+            superficieGauss = new FiguraGauss(tipo, cx * pxPorUnit, cy * pxPorUnit, cz * pxPorUnit, p1 * pxPorUnit, p2 * pxPorUnit, p3 * pxPorUnit, 0, "+", "S");
+            superficieConfirmada = true;
+            lblEstadoSuperficie.setText("✔ Superficie: " + tipo);
+            actualizarEstadoBotones();
+            dibujarEscena3D();
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "Ingresa dimensiones numéricas válidas.");
+        }
+    }
+
+    private void dibujarEscena3D() {
+        if (generador3D == null) return;
+        generador3D.limpiarElementos();
+        
+        // Ejes y cuadrícula ya se dibujan base en generador3D, pero agregaremos las figuras
+        if (figuraCargada != null) {
+            Color c = figuraCargada.getSigno().equals("+") ? Color.RED : Color.BLUE;
+            dibujarForma3D(figuraCargada, c, 1.0);
+        }
+        
+        if (superficieGauss != null) {
+            dibujarForma3D(superficieGauss, Color.web("#00acc1", 0.3), 0.3);
+        }
+    }
+
+    private void dibujarForma3D(FiguraGauss f, Color color, double opacity) {
+        javafx.scene.shape.Shape3D shape = null;
+        double pxPorUnit = PX_POR_UNIT;
+        double esc = generador3D.getScale();
+        
+        double p1 = (f.getParam1() / pxPorUnit) * esc;
+        double p2 = (f.getParam2() / pxPorUnit) * esc;
+        double p3 = (f.getParam3() / pxPorUnit) * esc;
+        
+        switch (f.getTipo()) {
+            case ESFERA:
+                shape = new javafx.scene.shape.Sphere(p1);
+                break;
+            case CILINDRO:
+                shape = new javafx.scene.shape.Cylinder(p1, p2);
+                break;
+            case CAJA:
+                shape = new javafx.scene.shape.Box(2 * p1, 2 * p2, 2 * p3);
+                break;
+            case CIRCULO:
+                shape = new javafx.scene.shape.Cylinder(p1, 2); 
+                break;
+            case RECTANGULO:
+                shape = new javafx.scene.shape.Box(2 * p1, 2, 2 * p2);
+                break;
+            case CUADRADO:
+                shape = new javafx.scene.shape.Box(2 * p1, 2, 2 * p1);
+                break;
+            case TRIANGULO:
+                shape = new javafx.scene.shape.Cylinder(p1, 2);
+                break;
+        }
+        
+        if (shape != null) {
+            javafx.scene.paint.PhongMaterial mat = new javafx.scene.paint.PhongMaterial(color);
+            shape.setMaterial(mat);
+            shape.setOpacity(opacity);
+            shape.setTranslateX((f.getCx() / pxPorUnit) * esc);
+            shape.setTranslateY(-(f.getCy() / pxPorUnit) * esc); 
+            shape.setTranslateZ((f.getCz() / pxPorUnit) * esc);
+            generador3D.getElementosGraficos().getChildren().add(shape);
+        }
     }
 
     @FXML
@@ -176,7 +393,7 @@ public class LeyGaussController {
         GaussCalculator calc = new GaussCalculator(PX_POR_UNIT);
         ultimoResultado = calc.calcular(figuraCargada, superficieGauss);
         mostrarResultados(ultimoResultado);
-        redibujar();
+        if (modo3D) dibujarEscena3D(); else redibujar();
     }
 
     @FXML
@@ -198,10 +415,11 @@ public class LeyGaussController {
         lblFraccion.setText("—");
         if (txtProcedimiento != null) txtProcedimiento.clear();
         chkLineasCampo.setSelected(false);
+        if (generador3D != null) generador3D.limpiarElementos();
 
         canvasGauss.setCursor(Cursor.DEFAULT);
         actualizarEstadoBotones();
-        dibujar(null, null);
+        if (modo3D) dibujarEscena3D(); else dibujar(null, null);
     }
 
     // =========================================================================
@@ -288,7 +506,7 @@ public class LeyGaussController {
             double q  = Double.parseDouble(cargaField.getText().trim());
             String s  = signoCargaCombo.getValue();
 
-            figuraCargada    = new FiguraGauss(tipo, cx, cy, p1, p2, q, s, "F" + contadorFiguras++);
+            figuraCargada    = new FiguraGauss(tipo, cx, cy, 0, p1, p2, 0, q, s, "F" + contadorFiguras++);
             figuraConfirmada = true;
             lblEstadoFigura.setText("✔ Figura: " + tipo + " | " + q + " µC (" + s + ")");
 
@@ -297,7 +515,7 @@ public class LeyGaussController {
             double p1 = (tipo == TipoFigura.RECTANGULO) ? dx : dim;
             double p2 = (tipo == TipoFigura.RECTANGULO || tipo == TipoFigura.TRIANGULO) ? dy : dim;
 
-            superficieGauss      = new FiguraGauss(tipo, cx, cy, p1, p2, 0, "+", "S");
+            superficieGauss      = new FiguraGauss(tipo, cx, cy, 0, p1, p2, 0, 0, "+", "S");
             superficieConfirmada = true;
             lblEstadoSuperficie.setText("✔ Superficie: " + tipo);
         }
@@ -591,7 +809,7 @@ public class LeyGaussController {
         double p1 = (tipo == TipoFigura.RECTANGULO) ? dx : dim;
         double p2 = (tipo == TipoFigura.RECTANGULO || tipo == TipoFigura.TRIANGULO) ? dy : dim;
 
-        return new FiguraGauss(tipo, cx, cy, p1, p2, 0, "+", "preview");
+        return new FiguraGauss(tipo, cx, cy, 0, p1, p2, 0, 0, "+", "preview");
     }
 
     // =========================================================================
