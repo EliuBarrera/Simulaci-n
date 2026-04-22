@@ -133,15 +133,15 @@ public class PdfGenerator {
             sb.append(String.format("     r  = %.4f %s\n", rf.getDistanciaEnUnidad(), simb));
             sb.append(String.format("     r  = %.4e m\n", rf.getDistanciaEnMetros()));
 
-            sb.append("\n   Angulo (eje X+, sentido antihorario):\n");
-            sb.append("     theta = arctan(Dy / Dx)\n");
-            sb.append(String.format("     theta = arctan(%.4f / %.4f) = %.2f grados\n",
+            sb.append("\n   Angulo del vector r (eje X+, sentido antihorario):\n");
+            sb.append("     theta_r = arctan(Dy / Dx)\n");
+            sb.append(String.format("     theta_r = arctan(%.4f / %.4f) = %.2f grados\n",
                 rf.getDy(), rf.getDx(), rf.getAnguloDeg()));
 
             if (is3D) {
-                sb.append("\n   Angulo de elevacion (desde plano XY):\n");
-                sb.append("     phi = arctan(Dz / sqrt(Dx^2 + Dy^2))\n");
-                sb.append(String.format("     phi = %.2f grados\n", rf.getAnguloElevacionDeg()));
+                sb.append("\n   Angulo de elevacion del vector r (desde plano XY):\n");
+                sb.append("     phi_r = arctan(Dz / sqrt(Dx^2 + Dy^2))\n");
+                sb.append(String.format("     phi_r = %.2f grados\n", rf.getAnguloElevacionDeg()));
             }
 
             sb.append("\n   Ley de Coulomb:\n");
@@ -153,18 +153,27 @@ public class PdfGenerator {
                 rf.getDistanciaEnMetros()));
             sb.append(String.format("     F = %.6e N\n", rf.getMagnitud()));
 
-            sb.append("\n   Componentes (con signo segun interaccion):\n");
+            // Componentes usando vector unitario con signo de interacción
+            String signoStr = rf.isEsRepulsion() ? "-" : "+";
+            String signoDesc = rf.isEsRepulsion()
+                ? "(signo - : repulsion, direccion opuesta a r)"
+                : "(signo + : atraccion, misma direccion que r)";
+            sb.append("\n   Componentes (descomposicion por vector unitario):\n");
+            sb.append(String.format("     %s\n", signoDesc));
             sb.append(String.format(
-                "     Fx = F * cos(theta) = %.6e * cos(%.2f) = %.6e N\n",
-                rf.getMagnitud(), rf.getAnguloDeg(), rf.getFx()));
+                "     Fx = %sF * (Dx / r) = %s%.6e * (%.4f / %.4f) = %.6e N\n",
+                signoStr, signoStr, rf.getMagnitud(),
+                rf.getDx(), rf.getDistanciaEnUnidad(), rf.getFx()));
             sb.append(String.format(
-                "     Fy = F * sin(theta) = %.6e * sin(%.2f) = %.6e N\n",
-                rf.getMagnitud(), rf.getAnguloDeg(), rf.getFy()));
+                "     Fy = %sF * (Dy / r) = %s%.6e * (%.4f / %.4f) = %.6e N\n",
+                signoStr, signoStr, rf.getMagnitud(),
+                rf.getDy(), rf.getDistanciaEnUnidad(), rf.getFy()));
 
             if (is3D) {
                 sb.append(String.format(
-                    "     Fz = F * sin(phi)   = %.6e * sin(%.2f) = %.6e N\n",
-                    rf.getMagnitud(), rf.getAnguloElevacionDeg(), rf.getFz()));
+                    "     Fz = %sF * (Dz / r) = %s%.6e * (%.4f / %.4f) = %.6e N\n",
+                    signoStr, signoStr, rf.getMagnitud(),
+                    rf.getDz(), rf.getDistanciaEnUnidad(), rf.getFz()));
             }
 
             sb.append(rf.isEsRepulsion()
