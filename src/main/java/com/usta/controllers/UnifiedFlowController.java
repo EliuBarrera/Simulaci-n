@@ -40,6 +40,11 @@ public class UnifiedFlowController {
 
     @FXML private Canvas    cartesianCanvas;
     @FXML private Pane      canvasPane;
+    @FXML private javafx.scene.control.CheckBox chkModo3D;
+
+    // ── Opciones 3D nativas ──────────
+    private boolean modo3D = false;
+    private com.usta.utils.GeneradorEscena3D generador3D;
 
 
     // ── State ─────────────────────────────────────────────────────────────────
@@ -55,8 +60,6 @@ public class UnifiedFlowController {
     private boolean syncingAngle = false;
     private boolean syncingSize  = false;
 
-    private static final double BASE_PX = 70.0;  // tamaño visual a escala ×1 (slider en mitad → figura media)
-
     // Últimos valores calculados — usados para dibujar el popup en el canvas
     private double lastCampo    = Double.NaN;
     private double lastArea     = Double.NaN;
@@ -64,6 +67,18 @@ public class UnifiedFlowController {
     private double lastAngle    = Double.NaN;
     private double lastFlujo    = Double.NaN;
     private boolean hasResult   = false;
+
+    // ── Estructura para múltiples figuras ─────────────────────────────────────
+    private static class FiguraFlujoState {
+        String tipo;
+        double base, height, radio, angle, scaleValue;
+
+        FiguraFlujoState(String tipo, double b, double h, double r, double ang, double sc) {
+            this.tipo = tipo; this.base = b; this.height = h; this.radio = r;
+            this.angle = ang; this.scaleValue = sc;
+        }
+    }
+    private java.util.List<FiguraFlujoState> figurasGuardadas = new java.util.ArrayList<>();
 
     private static double parseDoubleLocal(String texto) throws NumberFormatException {
         if (texto == null || texto.trim().isEmpty()) {
@@ -91,6 +106,16 @@ public class UnifiedFlowController {
             cartesianCanvas.setHeight(n.doubleValue());
             redraw();
         });
+
+        // Configuración Inicial 3D
+        if (canvasPane != null) {
+            generador3D = new com.usta.utils.GeneradorEscena3D(1000, 800);
+            generador3D.getSubScene().widthProperty().bind(canvasPane.widthProperty());
+            generador3D.getSubScene().heightProperty().bind(canvasPane.heightProperty());
+            generador3D.getSubScene().setVisible(false);
+            generador3D.getSubScene().setManaged(false);
+            canvasPane.getChildren().add(0, generador3D.getSubScene());
+        }
 
         // ── Angle slider → sync label + field + rotate + recalc ──────────────
         angleSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -132,6 +157,36 @@ public class UnifiedFlowController {
             if (simulationActive) tryAutoCalculate();
         });
 
+        redraw();
+    }
+
+    @FXML
+    private void onToggleModo3D() {
+        if (chkModo3D == null || figuraComboBox == null) return;
+        modo3D = chkModo3D.isSelected();
+        
+        // El canvasHUD ya no se oculta para mostrar cálculos, pero debe ser transparente
+        // al mouse en 3D para poder interactuar (rotar/zoom) con la escena detrás.
+        cartesianCanvas.setMouseTransparent(modo3D);
+        
+        // Cambiar dinámicamente las opciones del menú de figuras
+        figuraComboBox.getItems().clear();
+        if (modo3D) {
+            figuraComboBox.getItems().addAll("Placa Rectangular (3D)", "Placa Triangular (3D)", "Placa Circular (3D)", "Cilindro (3D)", "Cubo / Prisma (3D)");
+        } else {
+            figuraComboBox.getItems().addAll("Rectángulo", "Triángulo", "Circunferencia");
+        }
+        figuraComboBox.getSelectionModel().selectFirst();
+
+        if (generador3D != null) {
+            generador3D.getSubScene().setVisible(modo3D);
+            generador3D.getSubScene().setManaged(modo3D);
+            if (modo3D) {
+                generador3D.resetCamera();
+                generador3D.getSubScene().requestFocus(); // Dar foco para que el teclado/mouse funcionen mejor
+            }
+        }
+        
         redraw();
     }
 
@@ -192,7 +247,8 @@ public class UnifiedFlowController {
     }
 
     private void applyFiguraLayout(String figura) {
-        boolean isCircle    = "Circunferencia".equals(figura);
+        if (figura == null) return;
+        boolean isCircle = figura.contains("Circunferencia") || figura.contains("Circular") || figura.contains("Cilindro");
 
         setVisible(baseLabel,       !isCircle);
         setVisible(baseTextField,   !isCircle);
@@ -212,21 +268,20 @@ public class UnifiedFlowController {
     // ══ Area ══════════════════════════════════════════════════════════════════
     private double area() {
         String figura = figuraComboBox.getValue();
-        switch (figura) {
-            case "Circunferencia": {
-                double radio = parseDoubleLocal(radioTextField.getText());
-                return Math.PI * Math.pow(radio, 2);
-            }
-            case "Triángulo": {
-                double base   = parseDoubleLocal(baseTextField.getText());
-                double height = parseDoubleLocal(heightTextField.getText());
-                return (base * height) / 2.0;
-            }
-            default: {
-                double base   = parseDoubleLocal(baseTextField.getText());
-                double height = parseDoubleLocal(heightTextField.getText());
-                return base * height;
-            }
+        if (figura == null) return 0;
+
+        if (figura.contains("Circunferencia") || figura.contains("Circular") || figura.contains("Cilindro")) {
+            double radio = parseDoubleLocal(radioTextField.getText());
+            return Math.PI * Math.pow(radio, 2);
+        } else if (figura.contains("Triángulo") || figura.contains("Triangular")) {
+            double base   = parseDoubleLocal(baseTextField.getText());
+            double height = parseDoubleLocal(heightTextField.getText());
+            return (base * height) / 2.0;
+        } else {
+            // Rectángulo o Prisma
+            double base   = parseDoubleLocal(baseTextField.getText());
+            double height = parseDoubleLocal(heightTextField.getText());
+            return base * height;
         }
     }
 
@@ -271,15 +326,22 @@ public class UnifiedFlowController {
         double H = cartesianCanvas.getHeight();
         if (W <= 0 || H <= 0) return;
 
+        GraphicsContext gc = cartesianCanvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, W, H);
+
+        if (modo3D) {
+            redraw3D();
+            // En 3D solo dibujamos el popup sobre el canvas transparente
+            if (hasResult) drawCalcPopup(gc, W, H);
+            return;
+        }
+
         double cx   = W / 2.0;
         double cy   = H / 2.0;
         double armX = cx * 0.90;
         double armY = cy * 0.90;
         double arrow = 9.0;
         double lOff  = 16.0;
-
-        GraphicsContext gc = cartesianCanvas.getGraphicsContext2D();
-        gc.clearRect(0, 0, W, H);
 
         // ── Fondo: patrón de Campo Eléctrico ─────────────────────────
         drawElectricFieldArrows(gc, W, H);
@@ -333,6 +395,84 @@ public class UnifiedFlowController {
         if (hasResult) drawCalcPopup(gc, W, H);
     }
 
+    private void redraw3D() {
+        if (generador3D == null) return;
+        generador3D.limpiarElementos();
+        
+        // 1. Dibuja Campo Uniforme
+        dibujarCampo3D();
+        
+        // 2. Dibujar figuras guardadas
+        for (FiguraFlujoState f : figurasGuardadas) {
+            dibujarFigura3D(f.tipo, f.angle, f.scaleValue, 0.4); // Opacidad menor para guardadas
+        }
+
+        // 3. Dibujar la figura activa (la que se está editando)
+        String figuraActual = figuraComboBox.getValue();
+        if (figuraActual != null) {
+            double anguloActual = 0;
+            try { anguloActual = parseDoubleLocal(angleTextField.getText()); } catch (Exception ignored) {}
+            dibujarFigura3D(figuraActual, anguloActual, sizeSlider.getValue(), 0.8);
+        }
+    }
+
+    private void dibujarCampo3D() {
+        double esc = generador3D.getScale();
+        int gridX = 4;
+        double lineLength = 20.0 * esc;
+        double spacing = 2.0 * esc;
+        javafx.scene.paint.PhongMaterial laserMat = new javafx.scene.paint.PhongMaterial(Color.web("#0096ff", 0.3));
+        
+        for (int y = -gridX; y <= gridX; y++) {
+            for (int z = -gridX; z <= gridX; z++) {
+                if (y == 0 && z == 0) continue;
+                javafx.scene.shape.Cylinder laser = new javafx.scene.shape.Cylinder(1, lineLength);
+                laser.setMaterial(laserMat);
+                laser.setRotationAxis(javafx.scene.transform.Rotate.Z_AXIS);
+                laser.setRotate(90);
+                laser.setTranslateY(y * spacing);
+                laser.setTranslateZ(z * spacing);
+                generador3D.getElementosGraficos().getChildren().add(laser);
+            }
+        }
+    }
+
+    private void dibujarFigura3D(String tipo, double angle, double sizeFactor, double opacity) {
+        double esc = generador3D.getScale();
+        double sX = 2; // Grosor
+        double sY = sizeFactor * esc * 0.15; 
+        double sZ = sizeFactor * esc * 0.1;  
+        
+        javafx.scene.shape.Shape3D surface;
+        if (tipo.contains("Circunferencia") || tipo.contains("Circular") || tipo.contains("Cilindro")) {
+            surface = new javafx.scene.shape.Cylinder(sY, sX);
+            surface.setRotationAxis(javafx.scene.transform.Rotate.Z_AXIS);
+            surface.setRotate(90);
+        } else {
+            surface = new javafx.scene.shape.Box(sX, sY * 2, sZ * 2);
+        }
+        surface.setMaterial(new javafx.scene.paint.PhongMaterial(Color.web("#ffffff", opacity)));
+        
+        javafx.scene.Group shapeGroup = new javafx.scene.Group(surface);
+        
+        // Vector de Area
+        double vecLen = Math.max(sY, sZ) + (1.5 * esc);
+        javafx.scene.shape.Cylinder vecA = new javafx.scene.shape.Cylinder(2, vecLen);
+        vecA.setMaterial(new javafx.scene.paint.PhongMaterial(Color.RED));
+        vecA.setRotationAxis(javafx.scene.transform.Rotate.Z_AXIS);
+        vecA.setRotate(90);
+        vecA.setTranslateX(vecLen / 2);
+        
+        javafx.scene.shape.Sphere vecTip = new javafx.scene.shape.Sphere(6);
+        vecTip.setMaterial(new javafx.scene.paint.PhongMaterial(Color.RED));
+        vecTip.setTranslateX(vecLen);
+        
+        shapeGroup.getChildren().addAll(vecA, vecTip);
+        shapeGroup.getTransforms().add(new javafx.scene.transform.Rotate(-angle, javafx.scene.transform.Rotate.Z_AXIS));
+        
+        generador3D.getElementosGraficos().getChildren().add(shapeGroup);
+    }
+
     private void drawElectricFieldArrows(GraphicsContext gc, double W, double H) {
         gc.setStroke(Color.rgb(0, 150, 255, 0.4)); // Celeste semi-transparente
         gc.setFill(Color.rgb(0, 150, 255, 0.4));
@@ -371,41 +511,38 @@ public class UnifiedFlowController {
         gc.setLineWidth(4.0);
         gc.setFill(Color.rgb(255, 255, 255, 0.4)); // Transparente claro en medio
 
-        switch (figura) {
-            case "Circunferencia":
-                double rW = wArea * 0.4;
-                double rH = hArea / 1.5;
-                gc.fillOval(-rW, -rH, rW*2, rH*2);
-                gc.strokeOval(-rW, -rH, rW*2, rH*2);
-                break;
-            case "Triángulo":
-                double skewYTri = hArea * 0.15;
-                double planeWTri = wArea * 0.4;
-                gc.fillPolygon(
-                    new double[] { -planeWTri, planeWTri, 0 }, 
-                    new double[] { hArea/2 + skewYTri, hArea/2 - skewYTri, -hArea/2 }, 
-                    3
-                );
-                gc.strokePolygon(
-                    new double[] { -planeWTri, planeWTri, 0 }, 
-                    new double[] { hArea/2 + skewYTri, hArea/2 - skewYTri, -hArea/2 }, 
-                    3
-                );
-                break;
-            default: // Rectángulo
-                double skewY = hArea * 0.15;
-                double planeW = wArea * 0.4;
-                gc.fillPolygon(
-                    new double[] { -planeW,   planeW,   planeW, -planeW }, 
-                    new double[] { -hArea/2 + skewY, -hArea/2 - skewY, hArea/2 - skewY, hArea/2 + skewY }, 
-                    4
-                );
-                gc.strokePolygon(
-                    new double[] { -planeW,   planeW,   planeW, -planeW }, 
-                    new double[] { -hArea/2 + skewY, -hArea/2 - skewY, hArea/2 - skewY, hArea/2 + skewY }, 
-                    4
-                );
-                break;
+        if (figura.contains("Circunferencia") || figura.contains("Circular") || figura.contains("Cilindro")) {
+            double rW = wArea * 0.4;
+            double rH = hArea / 1.5;
+            gc.fillOval(-rW, -rH, rW*2, rH*2);
+            gc.strokeOval(-rW, -rH, rW*2, rH*2);
+        } else if (figura.contains("Triángulo") || figura.contains("Triangular")) {
+            double skewYTri = hArea * 0.15;
+            double planeWTri = wArea * 0.4;
+            gc.fillPolygon(
+                new double[] { -planeWTri, planeWTri, 0 }, 
+                new double[] { hArea/2 + skewYTri, hArea/2 - skewYTri, -hArea/2 }, 
+                3
+            );
+            gc.strokePolygon(
+                new double[] { -planeWTri, planeWTri, 0 }, 
+                new double[] { hArea/2 + skewYTri, hArea/2 - skewYTri, -hArea/2 }, 
+                3
+            );
+        } else {
+            // Rectángulo o Prisma
+            double skewY = hArea * 0.15;
+            double planeW = wArea * 0.4;
+            gc.fillPolygon(
+                new double[] { -planeW,   planeW,   planeW, -planeW }, 
+                new double[] { -hArea/2 + skewY, -hArea/2 - skewY, hArea/2 - skewY, hArea/2 + skewY }, 
+                4
+            );
+            gc.strokePolygon(
+                new double[] { -planeW,   planeW,   planeW, -planeW }, 
+                new double[] { -hArea/2 + skewY, -hArea/2 - skewY, hArea/2 - skewY, hArea/2 + skewY }, 
+                4
+            );
         }
 
         // Vector de Área
@@ -540,6 +677,23 @@ public class UnifiedFlowController {
         angleSliderLabel.setText("0°");
         sizeSliderLabel.setText(String.format(Locale.US, "×%.1f", 5.5));
         flowTextField.setText("--");
+        figurasGuardadas.clear();
+        redraw();
+    }
+
+    @FXML
+    private void onAgregarFigura() {
+        String tipo = figuraComboBox.getValue();
+        if (tipo == null) return;
+        
+        double ang = 0;
+        try { ang = parseDoubleLocal(angleTextField.getText()); } catch (Exception ignored) {}
+        
+        FiguraFlujoState nova = new FiguraFlujoState(tipo, 
+            baseValueAtStart, heightValueAtStart, radioValueAtStart, 
+            ang, sizeSlider.getValue());
+            
+        figurasGuardadas.add(nova);
         redraw();
     }
 

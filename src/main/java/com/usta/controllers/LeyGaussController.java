@@ -42,7 +42,6 @@ import java.util.Locale;
 public class LeyGaussController {
 
     // ── Constantes ────────────────────────────────────────────────────────────
-    private static final double MARGIN      = 50.0;
     private static final double PX_POR_UNIT = 80.0;
     private static final double CANVAS_W    = 1400.0;
     private static final double CANVAS_H    = 900.0;

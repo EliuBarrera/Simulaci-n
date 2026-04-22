@@ -67,7 +67,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.usta/com.usta.App</mainClass>
+                            <mainClass>com.usta/com.usta.Launcher</mainClass>
                         </configuration>
                     </execution>
                 </executions>

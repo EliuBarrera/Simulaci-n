@@ -7,6 +7,7 @@ C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\con
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\SimuladoresController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\Grafo.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\GeneradorEscena3D.java
+C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\GaussCanvasRenderer.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\AnimacionCoulombController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\ConceptosController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\LeyCoulombController.java
@@ -32,3 +33,5 @@ C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\con
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\controllers\ConceptosSelectorController.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\models\FiguraGauss.java
 C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\CoordenadasTransformador.java
+C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\Gauss3DManager.java
+C:\Users\TABORDA\Pictures\Proyecto EyM s\Proyecto EyM\src\main\java\com\usta\utils\ProcedimientoBuilder.java

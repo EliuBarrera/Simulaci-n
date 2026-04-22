@@ -36,6 +36,8 @@
             <!-- ── Título ──────────────────────────────────────────────────── -->
             <Label style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #004d40;" text="Flujo Eléctrico" />
             <Label style="-fx-font-size: 10px; -fx-text-fill: #00695c;" text="Simulador en campo uniforme" wrapText="true" />
+            
+            <javafx.scene.control.CheckBox fx:id="chkModo3D" text="Modo 3D Interactívo" onAction="#onToggleModo3D" style="-fx-text-fill: #00695c; -fx-font-weight: bold;" />
 
             <Separator />
 
@@ -70,6 +72,7 @@
             <!-- ── Acciones ────────────────────────────────────────────────── -->
             <Label style="-fx-font-weight: bold; -fx-text-fill: #004d40;" text="2. Calcular" />
             
+            <Button onMouseClicked="#onAgregarFigura" prefWidth="210" style="-fx-background-color: #4db6ac; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;" text="Agregar Figura" />
             <Button onMouseClicked="#startSimulation" prefWidth="210" text="Calcular Flujo" />
             <Button onMouseClicked="#restart" prefWidth="210" style="-fx-background-color: linear-gradient(to bottom,#ef5350,#c62828); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;" text="Limpiar todo" />
 
