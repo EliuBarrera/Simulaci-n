@@ -8,10 +8,12 @@ com\usta\controllers\AnimacionCoulombController.class
 com\usta\controllers\CalculoHandler.class
 com\usta\utils\GaussCanvasRenderer$1.class
 com\usta\controllers\AnimacionCoulombController$EstadoCirculo.class
+com\usta\utils\ProcedimientoBuilder.class
 com\usta\controllers\GrafoRenderer.class
 com\usta\utils\Gauss3DManager$1.class
 com\usta\utils\GaussCalculator.class
 com\usta\utils\PdfGenerator.class
+com\usta\utils\Gauss3DManager.class
 com\usta\controllers\ConceptosFlujoController.class
 com\usta\controllers\DetallesPdfHandler.class
 com\usta\models\Nodo.class
@@ -30,10 +32,12 @@ com\usta\controllers\LeyGaussController.class
 com\usta\controllers\ConceptosSelectorController.class
 com\usta\controllers\AnimacionTabHandler.class
 com\usta\models\ResultadoFuerza.class
+com\usta\utils\GaussCanvasRenderer.class
 com\usta\models\TipoFigura.class
 com\usta\utils\CoulombCalculator.class
 com\usta\models\ResultadoCalculo.class
 com\usta\models\FiguraGauss.class
+com\usta\controllers\UnifiedFlowController$FiguraFlujoState.class
 com\usta\models\FiguraGauss$1.class
 com\usta\App.class
 com\usta\Launcher.class
