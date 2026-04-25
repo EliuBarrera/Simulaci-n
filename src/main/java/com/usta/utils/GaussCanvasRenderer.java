@@ -241,30 +241,42 @@ public class GaussCanvasRenderer {
             double dX     = positiva ? dirX : -dirX;
             double dY     = positiva ? dirY : -dirY;
 
-            double startX = cx + dirX * figura.getParam1();
-            double startY = cy + dirY * figura.getParam1();
+            double currentX = cx + dirX * figura.getParam1();
+            double currentY = cy + dirY * figura.getParam1();
 
-            List<double[]> puntos = new ArrayList<>();
-            puntos.add(new double[]{startX, startY});
-            double endX = startX, endY = startY;
+            gc.beginPath();
+            gc.moveTo(currentX, currentY);
+
+            double prevX = currentX, prevY = currentY;
 
             for (int s = 0; s < MAX_PASOS; s++) {
-                double nx = endX + dX * PASO;
-                double ny = endY + dY * PASO;
-                if (!superficie.contienePunto(nx, ny)) break;
-                endX = nx; endY = ny;
-                puntos.add(new double[]{endX, endY});
+                currentX += dX * PASO;
+                currentY += dY * PASO;
+                
+                if (!superficie.contienePunto(currentX, currentY)) break;
+                
+                gc.lineTo(currentX, currentY);
+                prevX = currentX; 
+                prevY = currentY;
             }
-
-            if (puntos.size() > 1) {
-                gc.beginPath();
-                gc.moveTo(puntos.get(0)[0], puntos.get(0)[1]);
-                for (int k = 1; k < puntos.size(); k++)
-                    gc.lineTo(puntos.get(k)[0], puntos.get(k)[1]);
-                gc.stroke();
-                dibujarPuntaFlecha(gc, puntos);
+            gc.stroke();
+            
+            // Dibujar punta de flecha al final si la línea tiene longitud
+            if (currentX != cx + dirX * figura.getParam1()) {
+                double angArrow = Math.atan2(currentY - (currentY - dY*PASO), currentX - (currentX - dX*PASO));
+                dibujarPuntaRapida(gc, currentX, currentY, angArrow);
             }
         }
+    }
+
+    private void dibujarPuntaRapida(GraphicsContext gc, double x, double y, double ang) {
+        double head = 8;
+        gc.beginPath();
+        gc.moveTo(x, y);
+        gc.lineTo(x - head * Math.cos(ang - Math.PI / 7), y - head * Math.sin(ang - Math.PI / 7));
+        gc.moveTo(x, y);
+        gc.lineTo(x - head * Math.cos(ang + Math.PI / 7), y - head * Math.sin(ang + Math.PI / 7));
+        gc.stroke();
     }
 
     private void dibujarPuntaFlecha(GraphicsContext gc, List<double[]> puntos) {

@@ -17,8 +17,16 @@ public class Gauss3DManager {
 
     private final GeneradorEscena3D generador;
 
+    // Caché de materiales para evitar recreación constante y reducir consumo de RAM
+    private final PhongMaterial materialPositivo   = new PhongMaterial(Color.RED);
+    private final PhongMaterial materialNegativo   = new PhongMaterial(Color.BLUE);
+    private final PhongMaterial materialSuperficie = new PhongMaterial(Color.web("#00acc1", 0.3));
+
     public Gauss3DManager(GeneradorEscena3D generador) {
         this.generador = generador;
+        // Ajustar especularidad para que no brillen demasiado
+        materialPositivo.setSpecularColor(Color.WHITE);
+        materialNegativo.setSpecularColor(Color.WHITE);
     }
 
     public GeneradorEscena3D getGenerador() {
@@ -27,20 +35,17 @@ public class Gauss3DManager {
 
     /**
      * Limpia la escena y redibuja las figuras indicadas.
-     *
-     * @param figuraCargada   Figura con carga (null si no existe).
-     * @param superficieGauss Superficie gaussiana (null si no existe).
      */
     public void actualizar(FiguraGauss figuraCargada, FiguraGauss superficieGauss) {
         generador.limpiarElementos();
 
         if (figuraCargada != null) {
-            Color color = figuraCargada.getSigno().equals("+") ? Color.RED : Color.BLUE;
-            agregarForma(figuraCargada, color, 1.0);
+            PhongMaterial mat = figuraCargada.getSigno().equals("+") ? materialPositivo : materialNegativo;
+            agregarForma(figuraCargada, mat, 1.0);
         }
 
         if (superficieGauss != null) {
-            agregarForma(superficieGauss, Color.web("#00acc1", 0.3), 0.3);
+            agregarForma(superficieGauss, materialSuperficie, 0.3);
         }
     }
 
@@ -48,16 +53,17 @@ public class Gauss3DManager {
     // PRIVADOS
     // =========================================================================
 
-    private void agregarForma(FiguraGauss f, Color color, double opacity) {
+    private void agregarForma(FiguraGauss f, PhongMaterial material, double opacity) {
         Shape3D shape = crearForma(f);
         if (shape == null) return;
 
-        shape.setMaterial(new PhongMaterial(color));
-        shape.setOpacity(opacity);
-
+        shape.setMaterial(material);
+        // La opacidad en 3D se maneja mejor a través del color del material o del nodo
+        // JavaFX 3D tiene soporte limitado para setOpacity en nodos complejos
+        
         double esc = generador.getScale();
         shape.setTranslateX(toScene(f.getCx(), esc));
-        shape.setTranslateY(-toScene(f.getCy(), esc));   // Y invertido en JavaFX 3D
+        shape.setTranslateY(-toScene(f.getCy(), esc));
         shape.setTranslateZ(toScene(f.getCz(), esc));
 
         generador.getElementosGraficos().getChildren().add(shape);
@@ -69,14 +75,15 @@ public class Gauss3DManager {
         double p2  = toScene(f.getParam2(), esc);
         double p3  = toScene(f.getParam3(), esc);
 
+        // Optimizamos las divisiones (segundo o tercer parámetro) para reducir polígonos
         return switch (f.getTipo()) {
-            case ESFERA     -> new Sphere(p1);
-            case CILINDRO   -> new Cylinder(p1, p2);
+            case ESFERA     -> new Sphere(p1, 32); // 32 divisiones es suficiente para buen detalle
+            case CILINDRO   -> new Cylinder(p1, p2, 24); // 24 divisiones para cilindros
             case CAJA       -> new Box(2 * p1, 2 * p2, 2 * p3);
-            case CIRCULO    -> new Cylinder(p1, 2);
-            case RECTANGULO -> new Box(2 * p1, 2, 2 * p2);
-            case CUADRADO   -> new Box(2 * p1, 2, 2 * p1);
-            case TRIANGULO  -> new Cylinder(p1, 2);
+            case CIRCULO    -> new Cylinder(p1, 1, 24);
+            case RECTANGULO -> new Box(2 * p1, 1, 2 * p2);
+            case CUADRADO   -> new Box(2 * p1, 1, 2 * p1);
+            case TRIANGULO  -> new Cylinder(p1, 1, 3); // Un triángulo 3D es un cilindro de 3 caras
         };
     }
 

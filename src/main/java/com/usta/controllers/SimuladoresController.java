@@ -26,6 +26,11 @@ public class SimuladoresController {
     }
 
     @FXML
+    private void SimuladorPotencialElectrico() throws IOException {
+        App.setRoot("potencialElectrico");
+    }
+
+    @FXML
     private void cerrarApp() {
         System.exit(0);
     }

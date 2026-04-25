@@ -16,7 +16,7 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("login"), 1080, 640);
         stage.setScene(scene);
-        stage.setTitle("EduElectric- Simuladores de Física");
+        stage.setTitle("EduElectric- Simuladores de Electrostática");
 
         stage.getIcons().add(new Image(App.class.getResourceAsStream("/com/usta/views/img/logoFinal.png")));
 

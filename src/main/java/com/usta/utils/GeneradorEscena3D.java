@@ -43,6 +43,12 @@ public class GeneradorEscena3D {
     // Escala para unidades métricas -> pixeles 3D
     private final double scale = 100.0;
 
+    // Materiales reutilizables para optimizar RAM
+    private final PhongMaterial matEjeX = new PhongMaterial(Color.RED);
+    private final PhongMaterial matEjeY = new PhongMaterial(Color.GREEN);
+    private final PhongMaterial matEjeZ = new PhongMaterial(Color.BLUE);
+    private final PhongMaterial matOrigin = new PhongMaterial(Color.BLACK);
+
     public GeneradorEscena3D(double width, double height) {
         root3D = new Group();
         world = new Group();
@@ -105,13 +111,13 @@ public class GeneradorEscena3D {
 
         // Dibujar Nodos
         for (com.usta.models.Nodo nodo : grafo.getNodos()) {
-            Sphere s = new Sphere(15);
+            Sphere s = new Sphere(15, 24); // Reducir divisiones
             s.setTranslateX(nodo.getX() * scale);
             s.setTranslateY(-nodo.getY() * scale);
             s.setTranslateZ(nodo.getZ() * scale);
 
-            Color color = nodo.getTipoCarga().equals("+") ? Color.LIGHTCORAL : Color.LIGHTBLUE;
-            s.setMaterial(new PhongMaterial(color));
+            PhongMaterial mat = nodo.getTipoCarga().equals("+") ? matEjeX : matEjeZ; // Reusar materiales de ejes (Rojo/Azul)
+            s.setMaterial(mat);
 
             elementosGraficos.getChildren().add(s);
         }
@@ -137,6 +143,24 @@ public class GeneradorEscena3D {
         elementosGraficos.getChildren().add(arrow);
     }
 
+    // Malla estática para la cabeza de las flechas (Punta de pirámide)
+    private static final javafx.scene.shape.TriangleMesh PUNTA_FLECHA_MESH = crearMallaPunta();
+
+    private static javafx.scene.shape.TriangleMesh crearMallaPunta() {
+        javafx.scene.shape.TriangleMesh mesh = new javafx.scene.shape.TriangleMesh();
+        mesh.getTexCoords().addAll(0,0);
+        float headHeight = 10, headRadius = 5;
+        mesh.getPoints().addAll(
+             0, headHeight/2, 0,
+            -headRadius, -headHeight/2, -headRadius,
+             headRadius, -headHeight/2, -headRadius,
+             headRadius, -headHeight/2,  headRadius,
+            -headRadius, -headHeight/2,  headRadius
+        );
+        mesh.getFaces().addAll(0,0, 1,0, 2,0,  0,0, 2,0, 3,0,  0,0, 3,0, 4,0,  0,0, 4,0, 1,0,  1,0, 3,0, 2,0,  1,0, 4,0, 3,0);
+        return mesh;
+    }
+
     private Group crearFlechaEntrePuntos(javafx.geometry.Point3D origin, javafx.geometry.Point3D target, double radius, Color color) {
         javafx.geometry.Point3D yAxis = new javafx.geometry.Point3D(0, 1, 0);
         javafx.geometry.Point3D diff = target.subtract(origin);
@@ -149,36 +173,19 @@ public class GeneradorEscena3D {
         double angle = diff.magnitude() == 0 ? 0 : Math.acos(diff.normalize().dotProduct(yAxis));
         Rotate rotateAroundCenter = new Rotate(-Math.toDegrees(angle), axisOfRotation);
 
-        Cylinder shaft = new Cylinder(radius, height);
+        Cylinder shaft = new Cylinder(radius, height, 8); // Baja resolución (8 caras)
         shaft.setMaterial(new PhongMaterial(color));
         
-        // Cabeza de la flecha con MeshView apuntando hacia afuera
-        double headHeight = radius * 5;
-        double headRadius = radius * 2.5; 
-        javafx.scene.shape.TriangleMesh mesh = new javafx.scene.shape.TriangleMesh();
-        mesh.getTexCoords().addAll(0,0);
-        
-        // Vertices: El tip apunta hacia el +Y (Target) y la base descansa en -Y
-        mesh.getPoints().addAll(
-             0, (float)headHeight/2, 0, // Tip de la piramide (+Y)
-            -(float)headRadius, -(float)headHeight/2, -(float)headRadius, // Esquina 1 base (-Y)
-             (float)headRadius, -(float)headHeight/2, -(float)headRadius, // Esquina 2 base (-Y)
-             (float)headRadius, -(float)headHeight/2,  (float)headRadius, // Esquina 3 base (-Y)
-            -(float)headRadius, -(float)headHeight/2,  (float)headRadius  // Esquina 4 base (-Y)
-        );
-        // Generar caras invertidas para visualizacion correcta
-        mesh.getFaces().addAll(0,0, 1,0, 2,0,  0,0, 2,0, 3,0,  0,0, 3,0, 4,0,  0,0, 4,0, 1,0,  1,0, 3,0, 2,0,  1,0, 4,0, 3,0);
-        
-        javafx.scene.shape.MeshView head = new javafx.scene.shape.MeshView(mesh);
+        javafx.scene.shape.MeshView head = new javafx.scene.shape.MeshView(PUNTA_FLECHA_MESH);
         head.setMaterial(new PhongMaterial(color));
         
-        // Colocar la cabeza justo al final exterior de la flecha y correrlo un poco afuera del radio
-        // 'height/2' es donde termina el cilindro en +Y. Añadimos headHeight/2 para que la base descanse sobre el cilindro.
-        head.setTranslateY(height / 2 + headHeight / 2); 
+        // Escalar la punta según el radio solicitado (por defecto la malla mide 10x10)
+        double headScale = radius / 2.0; 
+        head.setScaleX(headScale); head.setScaleY(headScale); head.setScaleZ(headScale);
+        head.setTranslateY(height / 2 + (5 * headScale)); 
         
         Group flecha = new Group(shaft, head);
         flecha.getTransforms().addAll(moveToMidpoint, rotateAroundCenter);
-        // Opcional: Empujar la matriz generada fuera del radio de colision visual (15)
         flecha.getTransforms().add(new Translate(0, 15, 0));
         return flecha;
     }
@@ -202,54 +209,49 @@ public class GeneradorEscena3D {
     }
 
     private void construirEjes() {
-        double length = 1000.0; // Largo de los ejes
+        double length = 1000.0;
 
         // Eje X (Rojo)
         Box xAxis = new Box(length, 2, 2);
-        xAxis.setMaterial(new PhongMaterial(Color.RED));
+        xAxis.setMaterial(matEjeX);
         xAxis.setTranslateX(length / 2);
 
-        // Eje Y (Verde) -> En JavaFX Y crece hacia abajo, por eso lo hacemos visualmente compatible
+        // Eje Y (Verde)
         Box yAxis = new Box(2, length, 2);
-        yAxis.setMaterial(new PhongMaterial(Color.GREEN));
+        yAxis.setMaterial(matEjeY);
         yAxis.setTranslateY(-length / 2);
 
         // Eje Z (Azul)
         Box zAxis = new Box(2, 2, length);
-        zAxis.setMaterial(new PhongMaterial(Color.BLUE));
+        zAxis.setMaterial(matEjeZ);
         zAxis.setTranslateZ(length / 2);
 
-        // Centramos un pequeño origen
-        Sphere origin = new Sphere(5);
-        origin.setMaterial(new PhongMaterial(Color.BLACK));
+        // Origen
+        Sphere origin = new Sphere(5, 16); // Reducir divisiones
+        origin.setMaterial(matOrigin);
 
         Group ejes = new Group(xAxis, yAxis, zAxis, origin);
         
-        // Agregar Tics (Marcadores de unidad) en los 3 ejes
+        // Agregar Tics (Marcadores de unidad)
         for (int i = 1; i <= 10; i++) {
             double p = i * scale;
             
-            // Tics en X: línea perpendicular al eje X (en dirección Y)
-            // Cylinder por defecto es vertical (Y). Sin rotación queda perpendicular a X. ✓
-            Cylinder tickX = new Cylinder(1, 14);
-            tickX.setMaterial(new PhongMaterial(Color.RED));
+            // Tics en X (Reducir divisiones a 8 para ahorrar memoria)
+            Cylinder tickX = new Cylinder(1, 14, 8);
+            tickX.setMaterial(matEjeX);
             tickX.setTranslateX(p);
-            // Sin rotación: el cilindro va en Y, perpendicular a X
             
-            // Tics en Y: línea perpendicular al eje Y (en dirección X)
-            // Rotamos 90° sobre Z para que el cilindro quede horizontal (en X)
-            Cylinder tickY = new Cylinder(1, 14);
-            tickY.setMaterial(new PhongMaterial(Color.GREEN));
+            // Tics en Y
+            Cylinder tickY = new Cylinder(1, 14, 8);
+            tickY.setMaterial(matEjeY);
             tickY.setTranslateY(-p);
             tickY.setRotationAxis(Rotate.Z_AXIS);
             tickY.setRotate(90);
             
-            // Tics en Z: línea perpendicular al eje Z (en dirección Y)
-            // Sin rotación: el cilindro va en Y, perpendicular a Z. ✓
-            Cylinder tickZ = new Cylinder(1, 14);
-            tickZ.setMaterial(new PhongMaterial(Color.BLUE));
+            // Tics en Z
+            Cylinder tickZ = new Cylinder(1, 14, 8);
+            tickZ.setMaterial(matEjeZ);
             tickZ.setTranslateZ(p);
-            // Sin rotación: el cilindro va en Y, perpendicular a Z
             
             ejes.getChildren().addAll(tickX, tickY, tickZ);
         }

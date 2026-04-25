@@ -99,9 +99,11 @@ public class NodoDragHandler {
             circulo.setCenterX(screen[0]);
             circulo.setCenterY(screen[1]);
 
-            // Redibujar aristas
-            rutaHandler.actualizarVisuales(modo3DSupplier.getAsBoolean(), t,
-                    t.getUnidad() != null ? t.getUnidad() : com.usta.utils.UnidadDistancia.METROS);
+            // Redibujar aristas (solo si el handler de rutas existe)
+            if (rutaHandler != null) {
+                rutaHandler.actualizarVisuales(modo3DSupplier.getAsBoolean(), t,
+                        t.getUnidad() != null ? t.getUnidad() : com.usta.utils.UnidadDistancia.METROS);
+            }
 
             // Actualizar etiqueta de texto
             actualizarEtiqueta(nodo, screen, modo3DSupplier.getAsBoolean());

@@ -254,10 +254,11 @@ public class LeyCoulombController {
         });
 
         // Canvas
+        // Canvas 20x15 unidades (STEP=100, MARGIN=40 -> 2080x1580 px)
+        canvasPlano.setWidth(2080);
+        canvasPlano.setHeight(1580);
         canvasPlano.widthProperty().addListener( (obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
         canvasPlano.heightProperty().addListener((obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
-        canvasPlano.setWidth(5000);
-        canvasPlano.setHeight(5000);
         renderer.dibujarCuadrante(unidadActual);
 
         // TextArea de detalles

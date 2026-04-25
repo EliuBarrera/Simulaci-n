@@ -88,6 +88,24 @@
                   <!--  <Label text="Ley de " styleClass="card-title-id"/>  -->
                 </children>
             </VBox>
+
+            <VBox styleClass="card, card-estudiante" onMouseClicked="#SimuladorPotencialElectrico">
+                <children>
+                    <StackPane>
+                        <padding><Insets top="20" bottom="10"/></padding>
+                        <Circle radius="75" stroke="WHITE" strokeWidth="3">
+                            <fill>
+                                <ImagePattern>
+                                    <image>
+                                        <Image url="@img/ico.png" />
+                                    </image>
+                                </ImagePattern>
+                            </fill>
+                        </Circle>
+                    </StackPane>
+                    <Label text="Potencial Eléctrico" styleClass="card-subtitle"/>
+                </children>
+            </VBox>
         </HBox>
 
         <Button text="Salir" onAction="#volverLogin" styleClass="botonSalir"/>
