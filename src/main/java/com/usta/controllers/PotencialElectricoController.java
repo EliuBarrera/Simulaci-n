@@ -246,7 +246,22 @@ public class PotencialElectricoController {
     @FXML private void eliminarParticula() { particulaHandler.eliminar(this::actualizarVisuales); }
     @FXML private void editarParticula() { particulaHandler.editar(modo3D, crearTransformador(), this::actualizarVisuales); }
     @FXML private void toggleModo3D() { modo3D = modo3DCheckBox.isSelected(); modo3DHandler.toggle(modo3D, unidadActual); actualizarVisuales(); }
-    @FXML private void Regresar() throws IOException { App.setRoot("Simuladores"); }
+    @FXML
+    private void Regresar() throws IOException {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmación de Salida");
+        alert.setHeaderText("¿Está seguro de que desea salir?");
+        alert.setContentText("Todo el trabajo actual y los puntos configurados se borrarán.");
+
+        ButtonType btnSi = new ButtonType("Sí, salir");
+        ButtonType btnNo = new ButtonType("No, cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(btnSi, btnNo);
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == btnSi) {
+            App.setRoot("Simuladores");
+        }
+    }
 
     private CoordenadasTransformador crearTransformador() { return etiquetaReposicionador.crearTransformador(unidadActual); }
     private void cambiarUnidad(UnidadDistancia n) { unidadActual = n; actualizarVisuales(); }

@@ -798,6 +798,18 @@ public class UnifiedFlowController {
     // ══ Navigation ════════════════════════════════════════════════════════════
     @FXML
     private void switchToMenu() throws IOException {
-        App.setRoot("Simuladores"); // Asegúrate de que este FXML existe
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmación de Salida");
+        alert.setHeaderText("¿Está seguro de que desea salir?");
+        alert.setContentText("Toda la simulación de flujo actual se perderá.");
+
+        javafx.scene.control.ButtonType btnSi = new javafx.scene.control.ButtonType("Sí, salir");
+        javafx.scene.control.ButtonType btnNo = new javafx.scene.control.ButtonType("No, cancelar", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(btnSi, btnNo);
+
+        java.util.Optional<javafx.scene.control.ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == btnSi) {
+            App.setRoot("Simuladores");
+        }
     }
 }

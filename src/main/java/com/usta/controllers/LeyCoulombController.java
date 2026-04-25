@@ -396,7 +396,21 @@ public class LeyCoulombController {
     }
 
     @FXML
-    private void Regresar() throws IOException { App.setRoot("Simuladores"); }
+    private void Regresar() throws IOException {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmación de Salida");
+        alert.setHeaderText("¿Está seguro de que desea salir?");
+        alert.setContentText("Todo el trabajo actual y las partículas configuradas se borrarán.");
+
+        ButtonType btnSi = new ButtonType("Sí, salir");
+        ButtonType btnNo = new ButtonType("No, cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(btnSi, btnNo);
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == btnSi) {
+            App.setRoot("Simuladores");
+        }
+    }
 
     // =========================================================================
     // HELPERS PRIVADOS

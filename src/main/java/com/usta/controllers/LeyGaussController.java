@@ -140,7 +140,6 @@ public class LeyGaussController {
         signoCargaCombo.getItems().addAll("+", "-");
         signoCargaCombo.setValue("+");
     }
-
     private void configurarCanvas() {
         canvasGauss.setWidth(CANVAS_W);
         canvasGauss.setHeight(CANVAS_H);
@@ -358,7 +357,19 @@ public class LeyGaussController {
 
     @FXML
     private void Regresar() throws IOException {
-        App.setRoot("Simuladores");
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmación de Salida");
+        alert.setHeaderText("¿Está seguro de que desea salir?");
+        alert.setContentText("Toda la configuración de la figura y superficie gaussiana se borrará.");
+
+        ButtonType btnSi = new ButtonType("Sí, salir");
+        ButtonType btnNo = new ButtonType("No, cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(btnSi, btnNo);
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == btnSi) {
+            App.setRoot("Simuladores");
+        }
     }
 
     // =========================================================================
