@@ -1,5 +1,6 @@
-package com.usta.controllers;
+package com.usta.controllers.Handlers;
 
+import com.usta.controllers.AnimacionCoulombController;
 import com.usta.models.Nodo;
 import com.usta.models.ResultadoCalculo;
 import com.usta.utils.UnidadDistancia;

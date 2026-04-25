@@ -1,4 +1,4 @@
-package com.usta.controllers;
+package com.usta.controllers.Handlers;
 
 import com.usta.models.ResultadoCalculo;
 import com.usta.models.ResultadoFuerza;

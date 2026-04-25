@@ -1,6 +1,15 @@
 package com.usta.controllers;
 
 import com.usta.App;
+import com.usta.controllers.Handlers.AnimacionTabHandler;
+import com.usta.controllers.Handlers.CalculoHandler;
+import com.usta.controllers.Handlers.DetallesPdfHandler;
+import com.usta.controllers.Handlers.EtiquetaReposicionador;
+import com.usta.controllers.Handlers.GrafoRenderer;
+import com.usta.controllers.Handlers.Modo3DHandler;
+import com.usta.controllers.Handlers.NodoDragHandler;
+import com.usta.controllers.Handlers.ParticulaHandler;
+import com.usta.controllers.Handlers.RutaHandler;
 import com.usta.models.Grafo;
 import com.usta.models.Nodo;
 import com.usta.models.ResultadoCalculo;

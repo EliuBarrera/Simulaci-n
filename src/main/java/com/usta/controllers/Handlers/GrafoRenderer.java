@@ -1,4 +1,4 @@
-package com.usta.controllers;
+package com.usta.controllers.Handlers;
 
 import com.usta.models.ResultadoFuerza;
 import com.usta.utils.CoordenadasTransformador;

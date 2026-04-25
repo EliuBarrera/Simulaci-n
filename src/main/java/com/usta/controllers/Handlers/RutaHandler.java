@@ -1,4 +1,4 @@
-package com.usta.controllers;
+package com.usta.controllers.Handlers;
 
 import com.usta.models.Arista;
 import com.usta.models.Grafo;
