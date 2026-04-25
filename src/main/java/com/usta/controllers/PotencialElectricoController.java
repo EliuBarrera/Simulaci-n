@@ -16,7 +16,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -55,8 +54,9 @@ public class PotencialElectricoController {
     @FXML private HBox      editCoordZBox;
 
     @FXML private ComboBox<UnidadDistancia> unidadDistanciaComboBox;
-    @FXML private Label resultadoPotencialLabel;
-    @FXML private Label mousePosLabel;
+    @FXML private ComboBox<String>        puntoPruebaComboBox;
+    @FXML private Label                   resultadoPotencialLabel;
+    @FXML private TextArea                calculosDetalladosTextArea;
 
     private Grafo                    grafo;
     private Map<Nodo, Circle>        nodoCirculos;
@@ -99,6 +99,7 @@ public class PotencialElectricoController {
         enlazarCamposParticula();
         particulaEliminarComboBox.setItems(nombresParticulas);
         particulaEditarComboBox.setItems(nombresParticulas);
+        puntoPruebaComboBox.setItems(nombresParticulas);
 
         polaridadGroup = new ToggleGroup();
         positivaToggle.setToggleGroup(polaridadGroup);
@@ -114,58 +115,78 @@ public class PotencialElectricoController {
         canvasPlano.setHeight(1580);
         renderer.dibujarCuadrante(unidadActual);
 
-        // Listener para medir potencial en tiempo real
-        canvasPlano.setOnMouseMoved(this::handleMouseMoved);
-        canvasPlano.setOnMouseExited(e -> {
-            resultadoPotencialLabel.setText("-");
-            mousePosLabel.setText("Mueva el mouse sobre el plano");
-        });
-
         javafx.application.Platform.runLater(this::cargarSistemaPrueba);
     }
 
-    private void handleMouseMoved(MouseEvent e) {
-        if (modo3D) return; // En 3D el mouse orbita la cámara
+    @FXML
+    private void calcularPotencialBtn() {
+        String nombreP = puntoPruebaComboBox.getValue();
+        if (nombreP == null) {
+            mostrarAlerta("Error", "Seleccione un punto de prueba P.");
+            return;
+        }
+        Nodo nodoP = particulaHandler.buscarNodoPorNombre(nombreP);
+        if (nodoP == null) return;
 
-        CoordenadasTransformador t = crearTransformador();
-        double logX = t.pxXToUnidad(e.getX());
-        double logY = t.pxYToUnidad(e.getY());
-
-        double V = calcularPotencialEn(logX, logY, 0);
-        
-        mousePosLabel.setText(String.format("Posición: (%.2f, %.2f) %s", logX, logY, unidadActual.getSimbolo()));
-        resultadoPotencialLabel.setText(String.format("%.4e V", V));
+        double vTotal = calcularPotencialEn(nodoP.getX(), nodoP.getY(), nodoP.getZ());
+        resultadoPotencialLabel.setText(String.format("%.4e V", vTotal));
+        generarDetalles(nodoP, vTotal);
     }
 
     private double calcularPotencialEn(double x, double y, double z) {
         double k = 8.9875517923e9;
         double potencialTotal = 0;
-        
-        // Convertir coordenadas lógicas a metros usando la unidad actual
         for (Nodo n : grafo.getNodos()) {
+            if (n.getX() == x && n.getY() == y && n.getZ() == z) continue;
+
             double dx = unidadActual.convertirAMetros(x - n.getX());
             double dy = unidadActual.convertirAMetros(y - n.getY());
             double dz = unidadActual.convertirAMetros(z - n.getZ());
             double r = Math.sqrt(dx*dx + dy*dy + dz*dz);
 
-            if (r > 1e-12) { // Evitar división por cero
-                // Aplicar el signo de la carga (+ o -)
+            if (r > 1e-12) {
                 double signo = n.getTipoCarga().equals("+") ? 1.0 : -1.0;
-                double q = signo * n.getValorCarga() * 1e-6; // µC to C
+                double q = signo * n.getValorCarga() * 1e-6;
                 potencialTotal += k * q / r;
             }
         }
         return potencialTotal;
     }
 
+    private void generarDetalles(Nodo p, double vTotal) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("PROCEDIMIENTO: POTENCIAL ELÉCTRICO\n");
+        sb.append("====================================\n");
+        sb.append(String.format("Punto P: %s en (%.2f, %.2f, %.2f) %s\n\n", 
+                  p.getNombre(), p.getX(), p.getY(), p.getZ(), unidadActual.getSimbolo()));
+        
+        double k = 8.9875517923e9;
+        for (Nodo n : grafo.getNodos()) {
+            if (n == p) continue;
+            double dx = unidadActual.convertirAMetros(p.getX() - n.getX());
+            double dy = unidadActual.convertirAMetros(p.getY() - n.getY());
+            double dz = unidadActual.convertirAMetros(p.getZ() - n.getZ());
+            double r = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            double q = (n.getTipoCarga().equals("+") ? 1 : -1) * n.getValorCarga() * 1e-6;
+            double vi = k * q / r;
+            
+            sb.append(String.format("Carga %s (%s%.2e C):\n", n.getNombre(), n.getTipoCarga(), Math.abs(q)));
+            sb.append(String.format("  r = %.4e m\n", r));
+            sb.append(String.format("  V = (k * q) / r = %.4e V\n\n", vi));
+        }
+        sb.append("------------------------------------\n");
+        sb.append(String.format("POTENCIAL TOTAL V = %.4e V\n", vTotal));
+        calculosDetalladosTextArea.setText(sb.toString());
+    }
+
+    @FXML private void generarPDF() { mostrarAlerta("Info", "PDF en desarrollo."); }
 
     @FXML
     private void agregarParticula() {
-        CoordenadasTransformador t = crearTransformador();
-        particulaHandler.agregar(modo3D, t, () -> {
-            Nodo ultimo = grafo.getNodos().get(grafo.getNodos().size() - 1);
-            Circle c = nodoCirculos.get(ultimo);
-            if (c != null) dragHandler.hacerArrastrable(c, ultimo);
+        particulaHandler.agregar(modo3D, crearTransformador(), () -> {
+            Nodo u = grafo.getNodos().get(grafo.getNodos().size() - 1);
+            Circle c = nodoCirculos.get(u);
+            if (c != null) dragHandler.hacerArrastrable(c, u);
             if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         });
     }
@@ -184,35 +205,25 @@ public class PotencialElectricoController {
         });
     }
 
-    @FXML
-    private void toggleModo3D() {
-        modo3D = modo3DCheckBox.isSelected();
-        modo3DHandler.toggle(modo3D, unidadActual);
-    }
+    @FXML private void toggleModo3D() { modo3D = modo3DCheckBox.isSelected(); modo3DHandler.toggle(modo3D, unidadActual); }
+    @FXML private void Regresar() throws IOException { App.setRoot("Simuladores"); }
 
-    @FXML
-    private void Regresar() throws IOException { App.setRoot("Simuladores"); }
+    private CoordenadasTransformador crearTransformador() { return etiquetaReposicionador.crearTransformador(unidadActual); }
+    private void cambiarUnidad(UnidadDistancia nueva) { unidadActual = nueva; if (modo3D) renderer.dibujarCuadrante3D(unidadActual, crearTransformador()); else renderer.dibujarCuadrante(unidadActual); }
+    private void limpiarPotencial() { resultadoPotencialLabel.setText("-"); }
 
-    private CoordenadasTransformador crearTransformador() {
-        return etiquetaReposicionador.crearTransformador(unidadActual);
-    }
-
-    private void cambiarUnidad(UnidadDistancia nueva) {
-        unidadActual = nueva;
-        if (modo3D) renderer.dibujarCuadrante3D(unidadActual, crearTransformador());
-        else        renderer.dibujarCuadrante(unidadActual);
-    }
-
-    private void limpiarPotencial() {
-        resultadoPotencialLabel.setText("-");
+    private void mostrarAlerta(String titulo, String mensaje) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(titulo); a.setHeaderText(" "); a.setContentText(mensaje);
+        a.showAndWait();
     }
 
     private void cargarSistemaPrueba() {
-        nombreParticulaField.setText("q1"); positivaToggle.setSelected(true);
-        valorCargaField.setText("5"); coordXField.setText("5"); coordYField.setText("5");
+        nombreParticulaField.setText("q1"); positivaToggle.setSelected(true); valorCargaField.setText("5"); coordXField.setText("5"); coordYField.setText("5");
         agregarParticula();
-        nombreParticulaField.clear(); valorCargaField.clear(); coordXField.clear(); coordYField.clear();
-        scrollPane.setHvalue(0); scrollPane.setVvalue(1.0);
+        nombreParticulaField.setText("P"); valorCargaField.setText("0"); coordXField.setText("10"); coordYField.setText("5");
+        agregarParticula();
+        puntoPruebaComboBox.setValue("P");
     }
 
     private void enlazarCamposParticula() {

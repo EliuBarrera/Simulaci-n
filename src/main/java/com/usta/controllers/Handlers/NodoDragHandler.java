@@ -1,9 +1,7 @@
 package com.usta.controllers.Handlers;
 
-import com.usta.models.Grafo;
 import com.usta.models.Nodo;
 import com.usta.utils.CoordenadasTransformador;
-import com.usta.utils.UnidadDistancia;
 import javafx.scene.Cursor;
 import javafx.scene.layout.Pane;
 import javafx.scene.input.MouseButton;

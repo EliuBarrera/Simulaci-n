@@ -7,10 +7,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Encapsula toda la lógica de renderizado 2D sobre el Canvas de Gauss.
  * No tiene estado propio más allá del canvas que recibe; el controlador
@@ -247,7 +243,7 @@ public class GaussCanvasRenderer {
             gc.beginPath();
             gc.moveTo(currentX, currentY);
 
-            double prevX = currentX, prevY = currentY;
+         
 
             for (int s = 0; s < MAX_PASOS; s++) {
                 currentX += dX * PASO;
@@ -256,8 +252,6 @@ public class GaussCanvasRenderer {
                 if (!superficie.contienePunto(currentX, currentY)) break;
                 
                 gc.lineTo(currentX, currentY);
-                prevX = currentX; 
-                prevY = currentY;
             }
             gc.stroke();
             
@@ -276,22 +270,6 @@ public class GaussCanvasRenderer {
         gc.lineTo(x - head * Math.cos(ang - Math.PI / 7), y - head * Math.sin(ang - Math.PI / 7));
         gc.moveTo(x, y);
         gc.lineTo(x - head * Math.cos(ang + Math.PI / 7), y - head * Math.sin(ang + Math.PI / 7));
-        gc.stroke();
-    }
-
-    private void dibujarPuntaFlecha(GraphicsContext gc, List<double[]> puntos) {
-        if (puntos.size() <= 2) return;
-        double[] last = puntos.get(puntos.size() - 1);
-        double[] prev = puntos.get(puntos.size() - 2);
-        double   ang  = Math.atan2(last[1] - prev[1], last[0] - prev[0]);
-        double   head = 8;
-        gc.beginPath();
-        gc.moveTo(last[0], last[1]);
-        gc.lineTo(last[0] - head * Math.cos(ang - Math.PI / 7),
-                  last[1] - head * Math.sin(ang - Math.PI / 7));
-        gc.moveTo(last[0], last[1]);
-        gc.lineTo(last[0] - head * Math.cos(ang + Math.PI / 7),
-                  last[1] - head * Math.sin(ang + Math.PI / 7));
         gc.stroke();
     }
 }

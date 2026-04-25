@@ -43,7 +43,7 @@ public class Modo3DHandler {
     private final GrafoRenderer      renderer;
     private final RutaHandler        rutaHandler;
     private final Grafo              grafo;
-    private final Map<Nodo, Circle>  nodoCirculos;
+
     private final EtiquetaReposicionador etiquetaReposicionador;
 
     /**
@@ -80,7 +80,6 @@ public class Modo3DHandler {
         this.renderer                 = renderer;
         this.rutaHandler              = rutaHandler;
         this.grafo                    = grafo;
-        this.nodoCirculos             = nodoCirculos;
         this.etiquetaReposicionador   = etiquetaReposicionador;
         this.limpiarEstadoCalculo     = limpiarEstadoCalculo;
     }
