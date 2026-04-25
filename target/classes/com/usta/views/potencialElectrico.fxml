@@ -21,58 +21,59 @@
   <children>
     <HBox AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <children>
-    <TabPane fx:id="tabPanePrincipal" maxWidth="220.0" minWidth="220.0" tabClosingPolicy="UNAVAILABLE">
+    <TabPane fx:id="tabPanePrincipal" maxWidth="230.0" minWidth="230.0" tabClosingPolicy="UNAVAILABLE">
       <tabs>
 
-        <!-- ── Partículas (Estilo original Coulomb) ──────────────────────── -->
+        <!-- ── TAB: CARGAS (Sincronizado con Coulomb) ────────────────────── -->
         <Tab style="-fx-background-color: #14C5D9;" text="Cargas">
           <content>
             <AnchorPane style="-fx-background-color: #14C5D9;">
               <children>
                 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <content>
-                    <VBox spacing="8" style="-fx-background-color: #14C5D9;">
+                    <VBox spacing="10" style="-fx-background-color: #14C5D9;">
                       <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
-                      <Label text="Agregar Carga Fuente" />
-                      <TextField fx:id="nombreParticulaField" promptText="Nombre" />
-                      <HBox styleClass="dual-button-container">
-                        <ToggleButton fx:id="positivaToggle" styleClass="dual-button-left, dual-button-positive" text="+" />
-                        <ToggleButton fx:id="negativaToggle" styleClass="dual-button-right, dual-button-negative" text="-" />
+                      
+                      <Label text="Agregar Carga Fuente" style="-fx-font-weight: bold;" />
+                      <TextField fx:id="nombreParticulaField" promptText="Nombre (ej. q1)" />
+                      <HBox spacing="5" styleClass="dual-button-container">
+                        <ToggleButton fx:id="positivaToggle" prefWidth="100" styleClass="dual-button-left, dual-button-positive" text="+" />
+                        <ToggleButton fx:id="negativaToggle" prefWidth="100" styleClass="dual-button-right, dual-button-negative" text="-" />
                       </HBox>
-                      <TextField fx:id="valorCargaField" promptText="Valor (µC)" />
-                      <Separator />
-                      <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Coordenadas" />
-                      <HBox alignment="CENTER_LEFT" spacing="5">
-                        <Label prefWidth="20" text="X:" />
-                        <TextField fx:id="coordXField" prefWidth="55" />
-                        <Label prefWidth="20" text="Y:" />
-                        <TextField fx:id="coordYField" prefWidth="55" />
-                      </HBox>
-                      <HBox fx:id="coordZBox" alignment="CENTER_LEFT" managed="false" spacing="5" visible="false">
-                        <Label prefWidth="20" text="Z:" />
-                        <TextField fx:id="coordZField" prefWidth="55" />
-                      </HBox>
-                      <Button onAction="#agregarParticula" text="Agregar Carga" />
+                      <TextField fx:id="valorCargaField" promptText="Valor de carga (µC)" />
                       
                       <Separator />
-                      <Label text="Eliminar Carga" />
-                      <ComboBox fx:id="particulaEliminarComboBox" prefWidth="159.0" />
-                      <Button onAction="#eliminarParticula" text="Eliminar" />
+                      <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Coordenadas Lógicas" />
+                      <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label prefWidth="15" text="X:" />
+                        <TextField fx:id="coordXField" prefWidth="65" />
+                        <Label prefWidth="15" text="Y:" />
+                        <TextField fx:id="coordYField" prefWidth="65" />
+                      </HBox>
+                      <HBox fx:id="coordZBox" alignment="CENTER_LEFT" managed="false" spacing="10" visible="false">
+                        <Label prefWidth="15" text="Z:" />
+                        <TextField fx:id="coordZField" prefWidth="65" />
+                      </HBox>
+                      <Button onAction="#agregarParticula" prefWidth="200" text="Añadir Partícula" />
+                      
+                      <Separator />
+                      <Label text="Gestión de Cargas" style="-fx-font-weight: bold;" />
+                      <ComboBox fx:id="particulaEditarComboBox" prefWidth="200" promptText="Seleccionar Carga" />
+                      <TextField fx:id="particulaEditarField" promptText="Renombrar..." />
+                      <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label prefWidth="15" text="X:" />
+                        <TextField fx:id="editCoordXField" prefWidth="65" />
+                        <Label prefWidth="15" text="Y:" />
+                        <TextField fx:id="editCoordYField" prefWidth="65" />
+                      </HBox>
+                      <Button onAction="#editarParticula" prefWidth="200" text="Aplicar Cambios" />
 
                       <Separator />
-                      <Label text="Editar Carga" />
-                      <ComboBox fx:id="particulaEditarComboBox" prefWidth="159.0" />
-                      <TextField fx:id="particulaEditarField" promptText="Nuevo nombre" />
-                      <HBox alignment="CENTER_LEFT" spacing="5">
-                        <Label prefWidth="20" text="X:" />
-                        <TextField fx:id="editCoordXField" prefWidth="55" />
-                        <Label prefWidth="20" text="Y:" />
-                        <TextField fx:id="editCoordYField" prefWidth="55" />
-                      </HBox>
-                      <Button onAction="#editarParticula" text="Editar" />
+                      <ComboBox fx:id="particulaEliminarComboBox" prefWidth="200" promptText="Eliminar Partícula" />
+                      <Button onAction="#eliminarParticula" prefWidth="200" style="-fx-background-color: #FF6B6B; -fx-text-fill: white;" text="Eliminar Selección" />
                       
                       <Separator />
-                      <Button fx:id="CancelarButton" onAction="#Regresar" text="Salir" />
+                      <Button onAction="#Regresar" prefWidth="200" style="-fx-background-color: #455a64; -fx-text-fill: white;" text="Regresar al Menú" />
                     </VBox>
                   </content>
                 </ScrollPane>
@@ -81,34 +82,37 @@
           </content>
         </Tab>
 
-        <!-- ── Cálculos ──────────────────────────────────────────────────── -->
+        <!-- ── TAB: CÁLCULOS (Sincronizado con Coulomb) ─────────────────── -->
         <Tab style="-fx-background-color: #B3F0FF;" text="Cálculos">
           <content>
             <AnchorPane style="-fx-background-color: #B3F0FF;">
               <children>
-                <VBox spacing="10" style="-fx-background-color: #B3F0FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                <VBox spacing="15" style="-fx-background-color: #B3F0FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                   <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
                   <children>
-                    <Label text="Medición de Potencial" style="-fx-font-weight: bold;" />
-                    <Label text="Punto de Prueba (P)" />
-                    <ComboBox fx:id="puntoPruebaComboBox" prefWidth="180" promptText="Seleccionar Punto" />
-                    <Label text="Unidad de Distancia" />
-                    <ComboBox fx:id="unidadDistanciaComboBox" prefWidth="180" />
+                    <Label text="Análisis de Potencial" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
+                    
+                    <Label text="Punto de Evaluación P:" />
+                    <ComboBox fx:id="puntoPruebaComboBox" prefWidth="190" promptText="Elegir Sonda" />
+                    
+                    <Label text="Unidad de Medida:" />
+                    <ComboBox fx:id="unidadDistanciaComboBox" prefWidth="190" />
                     
                     <Separator />
-                    <CheckBox fx:id="modo3DCheckBox" onAction="#toggleModo3D" style="-fx-font-weight: bold;" text="⬡ Modo 3D" />
-                    <Separator />
+                    <CheckBox fx:id="modo3DCheckBox" onAction="#toggleModo3D" style="-fx-font-weight: bold;" text="Activar Modo 3D" />
+                    <CheckBox fx:id="mostrarLineasCheckBox" selected="true" text="Mostrar Líneas de Campo" onAction="#actualizarVisuales" />
                     
-                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Resultado en P:" />
-                    <VBox spacing="5" style="-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 5;">
+                    <Separator />
+                    <VBox spacing="8" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #0288d1; -fx-border-width: 2; -fx-border-radius: 10;">
                         <children>
-                            <Label text="VOLTAJE (V):" style="-fx-font-size: 10px; -fx-text-fill: #333;" />
-                            <Label fx:id="resultadoPotencialLabel" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1976d2; -fx-font-size: 16px;" />
+                            <Label text="POTENCIAL TOTAL (V):" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #0288d1;" />
+                            <Label fx:id="resultadoPotencialLabel" text="-" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #01579b;" />
                         </children>
                     </VBox>
 
-                    <Button onAction="#calcularPotencialBtn" text="Calcular Potencial" prefWidth="180" style="-fx-font-weight: bold;" />
-                    <Label text="Nota: Coloque una carga con valor 0 para usarla como punto de prueba P." style="-fx-font-size: 9px;" wrapText="true" />
+                    <Button onAction="#calcularPotencialBtn" prefWidth="190" style="-fx-background-color: #0288d1; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;" text="CALCULAR" />
+                    
+                    <Label text="Fórmula: V = Σ k·q / r" style="-fx-font-style: italic; -fx-alignment: center; -fx-pref-width: 190;" />
                   </children>
                 </VBox>
               </children>
@@ -116,17 +120,17 @@
           </content>
         </Tab>
 
-        <!-- ── Detalles ──────────────────────────────────────────────────── -->
+        <!-- ── TAB: DETALLES ────────────────────────────────────────────── -->
         <Tab style="-fx-background-color: #D0F5FF;" text="Detalles">
           <content>
             <AnchorPane style="-fx-background-color: #D0F5FF;">
               <children>
-                <VBox spacing="8" style="-fx-background-color: #D0F5FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                  <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></padding>
+                <VBox spacing="10" style="-fx-background-color: #D0F5FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                  <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
                   <children>
-                    <Label style="-fx-font-weight: bold; -fx-font-size: 13px;" text="Procedimiento" />
-                    <TextArea fx:id="calculosDetalladosTextArea" editable="false" prefHeight="400.0" style="-fx-font-family: 'Courier New'; -fx-font-size: 11px;" wrapText="true" VBox.vgrow="ALWAYS" />
-                    <Button onAction="#generarPDF" prefWidth="190" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-font-weight: bold;" text="Generar PDF" />
+                    <Label style="-fx-font-weight: bold;" text="Desglose Matemático" />
+                    <TextArea fx:id="calculosDetalladosTextArea" editable="false" style="-fx-font-family: 'Courier New'; -fx-font-size: 11px; -fx-control-inner-background: #f8f9fa;" wrapText="true" VBox.vgrow="ALWAYS" />
+                    <Button onAction="#generarPDF" prefWidth="200" style="-fx-background-color: #ef5350; -fx-text-fill: white; -fx-font-weight: bold;" text="Exportar a PDF" />
                   </children>
                 </VBox>
               </children>

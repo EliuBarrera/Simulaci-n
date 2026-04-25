@@ -57,6 +57,7 @@ public class PotencialElectricoController {
     @FXML private ComboBox<String>        puntoPruebaComboBox;
     @FXML private Label                   resultadoPotencialLabel;
     @FXML private TextArea                calculosDetalladosTextArea;
+    @FXML private CheckBox                mostrarLineasCheckBox;
 
     private Grafo                    grafo;
     private Map<Nodo, Circle>        nodoCirculos;
@@ -138,12 +139,10 @@ public class PotencialElectricoController {
         double potencialTotal = 0;
         for (Nodo n : grafo.getNodos()) {
             if (n.getX() == x && n.getY() == y && n.getZ() == z) continue;
-
             double dx = unidadActual.convertirAMetros(x - n.getX());
             double dy = unidadActual.convertirAMetros(y - n.getY());
             double dz = unidadActual.convertirAMetros(z - n.getZ());
             double r = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
             if (r > 1e-12) {
                 double signo = n.getTipoCarga().equals("+") ? 1.0 : -1.0;
                 double q = signo * n.getValorCarga() * 1e-6;
@@ -159,7 +158,6 @@ public class PotencialElectricoController {
         sb.append("====================================\n");
         sb.append(String.format("Punto P: %s en (%.2f, %.2f, %.2f) %s\n\n", 
                   p.getNombre(), p.getX(), p.getY(), p.getZ(), unidadActual.getSimbolo()));
-        
         double k = 8.9875517923e9;
         for (Nodo n : grafo.getNodos()) {
             if (n == p) continue;
@@ -169,7 +167,6 @@ public class PotencialElectricoController {
             double r = Math.sqrt(dx*dx + dy*dy + dz*dz);
             double q = (n.getTipoCarga().equals("+") ? 1 : -1) * n.getValorCarga() * 1e-6;
             double vi = k * q / r;
-            
             sb.append(String.format("Carga %s (%s%.2e C):\n", n.getNombre(), n.getTipoCarga(), Math.abs(q)));
             sb.append(String.format("  r = %.4e m\n", r));
             sb.append(String.format("  V = (k * q) / r = %.4e V\n\n", vi));
@@ -179,51 +176,92 @@ public class PotencialElectricoController {
         calculosDetalladosTextArea.setText(sb.toString());
     }
 
-    @FXML private void generarPDF() { mostrarAlerta("Info", "PDF en desarrollo."); }
+    @FXML
+    public void actualizarVisuales() {
+        if (modo3D) {
+            generador3D.sincronizarGrafo(grafo, unidadActual);
+        } else {
+            renderer.dibujarCuadrante(unidadActual);
+            if (mostrarLineasCheckBox != null && mostrarLineasCheckBox.isSelected()) {
+                dibujarLineasCampo();
+            }
+        }
+    }
+
+    private void dibujarLineasCampo() {
+        javafx.scene.canvas.GraphicsContext gc = canvasPlano.getGraphicsContext2D();
+        gc.setStroke(javafx.scene.paint.Color.rgb(0, 0, 0, 0.15));
+        gc.setLineWidth(1.2);
+        CoordenadasTransformador t = crearTransformador();
+        for (Nodo n : grafo.getNodos()) {
+            if (n.getValorCarga() <= 0 || n.getTipoCarga().equals("-")) continue;
+            int numLineas = (int) Math.min(48, Math.max(8, n.getValorCarga() * 8));
+            for (int i = 0; i < numLineas; i++) {
+                trazarLinea(n.getX(), n.getY(), 2 * Math.PI * i / numLineas, gc, t);
+            }
+        }
+    }
+
+    private void trazarLinea(double sx, double sy, double ang, javafx.scene.canvas.GraphicsContext gc, CoordenadasTransformador t) {
+        double curX = sx + 0.2 * Math.cos(ang), curY = sy + 0.2 * Math.sin(ang);
+        gc.beginPath();
+        double[] sPx = t.logicalToScreen(curX, curY, 0, false);
+        gc.moveTo(sPx[0], sPx[1]);
+        for (int i = 0; i < 150; i++) {
+            double Ex = 0, Ey = 0;
+            for (Nodo n : grafo.getNodos()) {
+                double dx = curX - n.getX(), dy = curY - n.getY(), r2 = dx*dx + dy*dy;
+                if (r2 < 0.01) continue;
+                double q = (n.getTipoCarga().equals("+") ? 1 : -1) * n.getValorCarga();
+                Ex += q * dx / Math.pow(r2, 1.5); Ey += q * dy / Math.pow(r2, 1.5);
+            }
+            double E = Math.sqrt(Ex*Ex + Ey*Ey);
+            if (E < 1e-4) break;
+            curX += (Ex / E) * 0.15; curY += (Ey / E) * 0.15;
+            double[] nPx = t.logicalToScreen(curX, curY, 0, false);
+            gc.lineTo(nPx[0], nPx[1]);
+            if (curX < -5 || curX > 25 || curY < -5 || curY > 20) break;
+            boolean stop = false;
+            for (Nodo n : grafo.getNodos()) {
+                if (n.getTipoCarga().equals("-") && (Math.pow(curX - n.getX(), 2) + Math.pow(curY - n.getY(), 2) < 0.04)) { stop = true; break; }
+            }
+            if (stop) break;
+        }
+        gc.stroke();
+    }
 
     @FXML
     private void agregarParticula() {
         particulaHandler.agregar(modo3D, crearTransformador(), () -> {
             Nodo u = grafo.getNodos().get(grafo.getNodos().size() - 1);
             Circle c = nodoCirculos.get(u);
-            if (c != null) dragHandler.hacerArrastrable(c, u);
-            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+            if (c != null) {
+                dragHandler.hacerArrastrable(c, u);
+                c.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_DRAGGED, e -> actualizarVisuales());
+            }
+            actualizarVisuales();
         });
     }
 
-    @FXML
-    private void eliminarParticula() {
-        particulaHandler.eliminar(() -> {
-            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
-        });
-    }
-
-    @FXML
-    private void editarParticula() {
-        particulaHandler.editar(modo3D, crearTransformador(), () -> {
-            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
-        });
-    }
-
-    @FXML private void toggleModo3D() { modo3D = modo3DCheckBox.isSelected(); modo3DHandler.toggle(modo3D, unidadActual); }
+    @FXML private void eliminarParticula() { particulaHandler.eliminar(this::actualizarVisuales); }
+    @FXML private void editarParticula() { particulaHandler.editar(modo3D, crearTransformador(), this::actualizarVisuales); }
+    @FXML private void toggleModo3D() { modo3D = modo3DCheckBox.isSelected(); modo3DHandler.toggle(modo3D, unidadActual); actualizarVisuales(); }
     @FXML private void Regresar() throws IOException { App.setRoot("Simuladores"); }
 
     private CoordenadasTransformador crearTransformador() { return etiquetaReposicionador.crearTransformador(unidadActual); }
-    private void cambiarUnidad(UnidadDistancia nueva) { unidadActual = nueva; if (modo3D) renderer.dibujarCuadrante3D(unidadActual, crearTransformador()); else renderer.dibujarCuadrante(unidadActual); }
+    private void cambiarUnidad(UnidadDistancia n) { unidadActual = n; actualizarVisuales(); }
     private void limpiarPotencial() { resultadoPotencialLabel.setText("-"); }
-
-    private void mostrarAlerta(String titulo, String mensaje) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(titulo); a.setHeaderText(" "); a.setContentText(mensaje);
-        a.showAndWait();
-    }
+    private void mostrarAlerta(String t, String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle(t); a.setHeaderText(" "); a.setContentText(m); a.showAndWait(); }
 
     private void cargarSistemaPrueba() {
         nombreParticulaField.setText("q1"); positivaToggle.setSelected(true); valorCargaField.setText("5"); coordXField.setText("5"); coordYField.setText("5");
         agregarParticula();
-        nombreParticulaField.setText("P"); valorCargaField.setText("0"); coordXField.setText("10"); coordYField.setText("5");
+        nombreParticulaField.setText("q2"); negativaToggle.setSelected(true); valorCargaField.setText("3"); coordXField.setText("12"); coordYField.setText("5");
+        agregarParticula();
+        nombreParticulaField.setText("P"); valorCargaField.setText("0"); coordXField.setText("8"); coordYField.setText("8");
         agregarParticula();
         puntoPruebaComboBox.setValue("P");
+        actualizarVisuales();
     }
 
     private void enlazarCamposParticula() {
@@ -241,4 +279,6 @@ public class PotencialElectricoController {
         particulaHandler.editCoordYField = editCoordYField;
         particulaHandler.editCoordZField = editCoordZField;
     }
+
+    @FXML private void generarPDF() { mostrarAlerta("Info", "PDF en desarrollo."); }
 }
