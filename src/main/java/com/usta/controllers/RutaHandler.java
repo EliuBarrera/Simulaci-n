@@ -171,10 +171,16 @@ public class RutaHandler {
     /** Recarga el combo de rutas eliminables. */
     public void actualizarComboEliminar(UnidadDistancia unidadActual) {
         ObservableList<String> rutas = FXCollections.observableArrayList();
+        java.util.Set<String> idSet = new java.util.HashSet<>();
+
         for (Arista a : grafo.getAristas()) {
+            String id = a.getIdentificador();
+            if (idSet.contains(id)) continue;
+            idSet.add(id);
+
             String r = a.getOrigen().getNombre() + " - " + a.getDestino().getNombre()
                 + " (" + String.format("%.2f %s", a.getPeso(), unidadActual.getSimbolo()) + ")";
-            if (!rutas.contains(r)) rutas.add(r);
+            rutas.add(r);
         }
         eliminarRutaComboBox.setItems(rutas);
     }

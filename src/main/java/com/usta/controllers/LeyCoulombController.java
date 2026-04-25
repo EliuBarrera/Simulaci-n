@@ -5,57 +5,65 @@ import com.usta.models.Grafo;
 import com.usta.models.Nodo;
 import com.usta.models.ResultadoCalculo;
 import com.usta.utils.CoordenadasTransformador;
+import com.usta.utils.GeneradorEscena3D;
 import com.usta.utils.UnidadDistancia;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Text;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import com.usta.utils.GeneradorEscena3D;
 
 /**
  * Controlador principal para la vista de Ley de Coulomb.
  *
- * Actúa como coordinador: mantiene el estado compartido
- * (Grafo, nodoCirculos, ultimoResultado, modo3D, unidadActual, rotación)
- * y delega la lógica a handlers especializados.
+ * Actúa exclusivamente como <em>coordinador</em>: mantiene el estado
+ * compartido e instancia/enlaza los handlers especializados.
  *
- * Coordenadas del Nodo: siempre LÓGICAS (unidades del plano).
- * Conversión a pantalla: mediante CoordenadasTransformador.
+ * Responsabilidades propias:
+ *  - Mantener {@code modo3D} y {@code unidadActual} como fuente de verdad.
+ *  - Inicializar el grafo, los handlers y los controles FXML.
+ *  - Recibir eventos @FXML y delegar sin lógica adicional.
+ *
+ * Lógica delegada:
+ *  - Partículas      → {@link ParticulaHandler}
+ *  - Rutas           → {@link RutaHandler}
+ *  - Cálculo         → {@link CalculoHandler}
+ *  - Renderizado     → {@link GrafoRenderer}
+ *  - PDF/Detalles    → {@link DetallesPdfHandler}
+ *  - Animación       → {@link AnimacionTabHandler}
+ *  - Arrastre nodos  → {@link NodoDragHandler}
+ *  - Toggle 2D/3D    → {@link Modo3DHandler}
+ *  - Etiquetas       → {@link EtiquetaReposicionador}
  */
 public class LeyCoulombController {
 
-    // ── FXML: layout principal ────────────────────────────────────────────
-    @FXML private Pane       grafoPane;
-    @FXML private ScrollPane scrollPane;
-    @FXML private Canvas     canvasPlano;
-    @FXML private AnchorPane rootPane;
-    @FXML private TabPane    tabPanePrincipal;
+    // ── FXML: layout principal ────────────────────────────────────────────────
+    @FXML private Pane        grafoPane;
+    @FXML private ScrollPane  scrollPane;
+    @FXML private Canvas      canvasPlano;
+    @FXML private AnchorPane  rootPane;
+    @FXML private TabPane     tabPanePrincipal;
 
-    // ── FXML: partículas ─────────────────────────────────────────────────
-    @FXML private TextField  nombreParticulaField;
-    @FXML private TextField  valorCargaField;
-    @FXML private ToggleButton positivaToggle;
-    @FXML private ToggleButton negativaToggle;
-    @FXML private ComboBox<String> particulaEliminarComboBox;
-    @FXML private TextField  particulaEditarField;
-    @FXML private ComboBox<String> particulaEditarComboBox;
+    // ── FXML: partículas ──────────────────────────────────────────────────────
+    @FXML private TextField          nombreParticulaField;
+    @FXML private TextField          valorCargaField;
+    @FXML private ToggleButton       positivaToggle;
+    @FXML private ToggleButton       negativaToggle;
+    @FXML private ComboBox<String>   particulaEliminarComboBox;
+    @FXML private TextField          particulaEditarField;
+    @FXML private ComboBox<String>   particulaEditarComboBox;
 
-    // ── FXML: coordenadas agregar ────────────────────────────────────────
+    // ── FXML: coordenadas agregar ─────────────────────────────────────────────
     @FXML private TextField coordXField;
     @FXML private TextField coordYField;
     @FXML private TextField coordZField;
@@ -63,31 +71,31 @@ public class LeyCoulombController {
     @FXML private CheckBox  modo3DCheckBox;
     @FXML private Label     modo3DInfoLabel;
 
-    // ── FXML: coordenadas editar ─────────────────────────────────────────
+    // ── FXML: coordenadas editar ──────────────────────────────────────────────
     @FXML private TextField editCoordXField;
     @FXML private TextField editCoordYField;
     @FXML private TextField editCoordZField;
     @FXML private HBox      editCoordZBox;
 
-    // ── FXML: rutas ───────────────────────────────────────────────────────
+    // ── FXML: rutas ───────────────────────────────────────────────────────────
     @FXML private ComboBox<String> origenRutaComboBox;
     @FXML private ComboBox<String> destinoRutaComboBox;
     @FXML private ComboBox<String> eliminarRutaComboBox;
 
-    // ── FXML: cálculos ────────────────────────────────────────────────────
-    @FXML private ComboBox<String>           particulaOrigenComboBox;
-    @FXML private ComboBox<UnidadDistancia>  unidadDistanciaComboBox;
-    @FXML private RadioButton  fuerzaTotalRadio;
-    @FXML private RadioButton  fuerzasIndividualesRadio;
-    @FXML private Button       calcularButton;
-    @FXML private Button       cancelarButton;
+    // ── FXML: cálculos ────────────────────────────────────────────────────────
+    @FXML private ComboBox<String>        particulaOrigenComboBox;
+    @FXML private ComboBox<UnidadDistancia> unidadDistanciaComboBox;
+    @FXML private RadioButton             fuerzaTotalRadio;
+    @FXML private RadioButton             fuerzasIndividualesRadio;
+    @FXML private Button                  calcularButton;
+    @FXML private Button                  cancelarButton;
 
-    // ── FXML: resultados ─────────────────────────────────────────────────
+    // ── FXML: resultados ──────────────────────────────────────────────────────
     @FXML private Label    resultadoFuerzaLabel;
     @FXML private Label    resultadoCampoLabel;
     @FXML private TextArea calculosDetalladosTextArea;
 
-    // ── FXML: animación ───────────────────────────────────────────────────
+    // ── FXML: animación ───────────────────────────────────────────────────────
     @FXML private Tab    animacionTab;
     @FXML private Label  pasoIndicadorLabel;
     @FXML private Label  pasoDescripcionLabel;
@@ -97,57 +105,69 @@ public class LeyCoulombController {
     @FXML private Button btnReiniciarAnimacion;
     @FXML private Button btnDetenerAnimacion;
 
-    // ── Estado compartido ────────────────────────────────────────────────
-    private Grafo                  grafo;
-    private Map<Nodo, Circle>      nodoCirculos;
-    private ObservableList<String> nombresParticulas;
-    private boolean                modo3D       = false;
-    private UnidadDistancia        unidadActual = UnidadDistancia.METROS;
-    private ResultadoCalculo       ultimoResultado = null;
-    private ToggleGroup            modoVisualizacionGroup;
-    private ToggleGroup            polaridadGroup;
+    // ── Estado compartido ─────────────────────────────────────────────────────
+    private Grafo                    grafo;
+    private Map<Nodo, Circle>        nodoCirculos;
+    private ObservableList<String>   nombresParticulas;
+    private boolean                  modo3D        = false;
+    private UnidadDistancia          unidadActual  = UnidadDistancia.METROS;
+    private ResultadoCalculo         ultimoResultado;
+    private ToggleGroup              modoVisualizacionGroup;
+    private ToggleGroup              polaridadGroup;
 
-
-    // ── Handlers ─────────────────────────────────────────────────────────
-    private ParticulaHandler    particulaHandler;
-    private RutaHandler         rutaHandler;
-    private CalculoHandler      calculoHandler;
-    private GrafoRenderer       renderer;
-    private DetallesPdfHandler  detallesPdfHandler;
-    private AnimacionTabHandler animacionHandler;
-    private GeneradorEscena3D   generador3D;
-
-
-    // =========================================================================
-    // UTILIDADES DE TRANSFORMACIÓN
-    // =========================================================================
-
-    /** Crea un transformador con el estado actual (canvas, unidad, ángulos de rotación). */
-    private CoordenadasTransformador crearTransformador() {
-        double alphaDeg = 30;
-        double betaDeg  = 30;
-        return new CoordenadasTransformador(
-            canvasPlano.getHeight(), canvasPlano.getWidth(),
-            unidadActual, alphaDeg, betaDeg);
-    }
-
+    // ── Handlers ──────────────────────────────────────────────────────────────
+    private ParticulaHandler         particulaHandler;
+    private RutaHandler              rutaHandler;
+    private CalculoHandler           calculoHandler;
+    private GrafoRenderer            renderer;
+    private DetallesPdfHandler       detallesPdfHandler;
+    private AnimacionTabHandler      animacionHandler;
+    private GeneradorEscena3D        generador3D;
+    private NodoDragHandler          dragHandler;
+    private Modo3DHandler            modo3DHandler;
+    private EtiquetaReposicionador   etiquetaReposicionador;
 
     // =========================================================================
     // INICIALIZACIÓN
     // =========================================================================
+
     public void initialize() {
         grafo             = new Grafo();
         nodoCirculos      = new HashMap<>();
         nombresParticulas = FXCollections.observableArrayList();
 
-        // Instanciar handlers
+        // Instanciar handlers que no dependen de otros handlers
         particulaHandler   = new ParticulaHandler(grafo, nodoCirculos, nombresParticulas,
-                                 canvasPlano, scrollPane, grafoPane);
+                                                   canvasPlano, scrollPane, grafoPane);
         rutaHandler        = new RutaHandler(grafo, grafoPane);
         calculoHandler     = new CalculoHandler(grafo, canvasPlano);
         renderer           = new GrafoRenderer(grafoPane, canvasPlano);
         detallesPdfHandler = new DetallesPdfHandler(grafoPane);
         animacionHandler   = new AnimacionTabHandler();
+
+        // 3D
+        generador3D = new GeneradorEscena3D(1000, 800);
+        generador3D.getSubScene().widthProperty().bind(scrollPane.widthProperty().subtract(2));
+        generador3D.getSubScene().heightProperty().bind(scrollPane.heightProperty().subtract(2));
+        generador3D.getSubScene().setVisible(false);
+        generador3D.getSubScene().setManaged(false);
+        grafoPane.getChildren().add(0, generador3D.getSubScene());
+
+        // Handlers que dependen de generador3D
+        etiquetaReposicionador = new EtiquetaReposicionador(
+                grafoPane, canvasPlano, nodoCirculos, generador3D);
+
+        dragHandler = new NodoDragHandler(
+                grafoPane, nodoCirculos, rutaHandler,
+                () -> etiquetaReposicionador.crearTransformador(unidadActual),
+                () -> modo3D);
+
+        modo3DHandler = new Modo3DHandler(
+                canvasPlano, scrollPane, grafoPane, tabPanePrincipal, animacionTab,
+                coordZBox, editCoordZBox, modo3DInfoLabel,
+                generador3D, renderer, rutaHandler, grafo, nodoCirculos,
+                etiquetaReposicionador,
+                this::limpiarEstadoCalculo);
 
         // Enlazar campos FXML a los handlers
         enlazarCamposParticula();
@@ -156,7 +176,7 @@ public class LeyCoulombController {
         enlazarCamposDetalles();
         enlazarCamposAnimacion();
 
-        // Configurar combos de partículas
+        // Combos de partículas
         origenRutaComboBox.setItems(nombresParticulas);
         destinoRutaComboBox.setItems(nombresParticulas);
         particulaEliminarComboBox.setItems(nombresParticulas);
@@ -165,13 +185,12 @@ public class LeyCoulombController {
             particulaEditarComboBox.setItems(nombresParticulas);
         eliminarRutaComboBox.setItems(FXCollections.observableArrayList());
 
-        // Grupo de radio de visualización
+        // Grupos de toggle
         modoVisualizacionGroup = new ToggleGroup();
         fuerzaTotalRadio.setToggleGroup(modoVisualizacionGroup);
         fuerzasIndividualesRadio.setToggleGroup(modoVisualizacionGroup);
         fuerzaTotalRadio.setSelected(true);
 
-        // Grupo de polaridad (Dual Button)
         polaridadGroup = new ToggleGroup();
         positivaToggle.setToggleGroup(polaridadGroup);
         negativaToggle.setToggleGroup(polaridadGroup);
@@ -185,108 +204,80 @@ public class LeyCoulombController {
 
         // Combo de unidades
         ObservableList<UnidadDistancia> unidades = FXCollections.observableArrayList(
-            UnidadDistancia.KILOMETROS, UnidadDistancia.METROS,
-            UnidadDistancia.CENTIMETROS, UnidadDistancia.MILIMETROS,
-            UnidadDistancia.MICROMETROS, UnidadDistancia.NANOMETROS,
-            UnidadDistancia.PICOMETROS
-        );
+                UnidadDistancia.KILOMETROS, UnidadDistancia.METROS,
+                UnidadDistancia.CENTIMETROS, UnidadDistancia.MILIMETROS,
+                UnidadDistancia.MICROMETROS, UnidadDistancia.NANOMETROS,
+                UnidadDistancia.PICOMETROS);
         unidadDistanciaComboBox.setItems(unidades);
         unidadDistanciaComboBox.setValue(UnidadDistancia.METROS);
         unidadDistanciaComboBox.setOnAction(e -> cambiarUnidad(unidadDistanciaComboBox.getValue()));
 
+        // Callback de resultado de cálculo
         calculoHandler.setOnResultado(res -> {
             ultimoResultado = res;
-            Nodo orig = res.getParticulaOrigen();
-            Circle c = nodoCirculos.get(orig);
+            Nodo   orig = res.getParticulaOrigen();
+            Circle c    = nodoCirculos.get(orig);
             if (c == null) return;
 
             if (modo3D) {
                 generador3D.sincronizarGrafo(grafo, unidadActual);
                 if (fuerzasIndividualesRadio.isSelected()) {
-                    for (com.usta.models.ResultadoFuerza rf : res.getFuerzasIndividuales()) {
+                    for (com.usta.models.ResultadoFuerza rf : res.getFuerzasIndividuales())
                         generador3D.dibujarFicha(orig.getX(), orig.getY(), orig.getZ(),
-                            rf.getFx(), rf.getFy(), rf.getFz(), javafx.scene.paint.Color.ORANGE);
-                    }
+                                rf.getFx(), rf.getFy(), rf.getFz(), javafx.scene.paint.Color.ORANGE);
                 } else {
                     generador3D.dibujarFicha(orig.getX(), orig.getY(), orig.getZ(),
-                        res.getFuerzaTotalX(), res.getFuerzaTotalY(), res.getFuerzaTotalZ(), javafx.scene.paint.Color.RED);
+                            res.getFuerzaTotalX(), res.getFuerzaTotalY(), res.getFuerzaTotalZ(),
+                            javafx.scene.paint.Color.RED);
                 }
             } else {
                 double sx = c.getCenterX(), sy = c.getCenterY();
-                if (fuerzasIndividualesRadio.isSelected()) {
+                if (fuerzasIndividualesRadio.isSelected())
                     renderer.dibujarFlechasIndividuales(sx, sy, res.getFuerzasIndividuales());
-                } else {
+                else
                     renderer.dibujarFlechaFuerza(sx, sy, res.getFuerzaTotalX(), res.getFuerzaTotalY());
-                }
             }
         });
+
         calculoHandler.setOnCancelar(() -> {
             renderer.limpiarFlechas();
             if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         });
 
-        // Canvas inicial
-        canvasPlano.widthProperty().addListener((obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
+        // Canvas
+        canvasPlano.widthProperty().addListener( (obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
         canvasPlano.heightProperty().addListener((obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
-        canvasPlano.setWidth(2100);
-        canvasPlano.setHeight(1300);
+        canvasPlano.setWidth(5000);
+        canvasPlano.setHeight(5000);
         renderer.dibujarCuadrante(unidadActual);
 
         // TextArea de detalles
         if (calculosDetalladosTextArea != null) {
             calculosDetalladosTextArea.setEditable(false);
             calculosDetalladosTextArea.setWrapText(true);
-            calculosDetalladosTextArea.setStyle(
-                "-fx-font-family: 'Courier New'; -fx-font-size: 11px;");
+            calculosDetalladosTextArea.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 11px;");
         }
 
-        // Inicializar 3D nativo
-        generador3D = new GeneradorEscena3D(1000, 800);
-        // Bind SubScene al viewport del ScrollPane (area disponible sin el TabPane)
-        generador3D.getSubScene().widthProperty().bind(scrollPane.widthProperty().subtract(2));
-        generador3D.getSubScene().heightProperty().bind(scrollPane.heightProperty().subtract(2));
-        generador3D.getSubScene().setVisible(false);
-        generador3D.getSubScene().setManaged(false);
-        grafoPane.getChildren().add(0, generador3D.getSubScene());
+        // Listeners de cámara → reposicionar etiquetas 3D
+        generador3D.getCameraRotX().angleProperty().addListener((obs, o, n) ->
+                etiquetaReposicionador.reposicionarEtiquetas3D(unidadActual));
+        generador3D.getCameraRotY().angleProperty().addListener((obs, o, n) ->
+                etiquetaReposicionador.reposicionarEtiquetas3D(unidadActual));
+        generador3D.getCameraPan().xProperty().addListener((obs, o, n) ->
+                etiquetaReposicionador.reposicionarEtiquetas3D(unidadActual));
+        generador3D.getCameraPan().yProperty().addListener((obs, o, n) ->
+                etiquetaReposicionador.reposicionarEtiquetas3D(unidadActual));
+        generador3D.getCamera().translateZProperty().addListener((obs, o, n) ->
+                etiquetaReposicionador.reposicionarEtiquetas3D(unidadActual));
 
-        // Auto-cargar sistema de prueba
-        javafx.application.Platform.runLater(() -> {
-            nombreParticulaField.setText("q1"); positivaToggle.setSelected(true); valorCargaField.setText("4");
-            coordXField.setText("2"); coordYField.setText("5"); coordZField.setText("0"); agregarParticula();
-            
-            nombreParticulaField.setText("q2"); negativaToggle.setSelected(true); valorCargaField.setText("3");
-            coordXField.setText("5"); coordYField.setText("2"); coordZField.setText("0"); agregarParticula();
-            
-            nombreParticulaField.setText("q3"); positivaToggle.setSelected(true); valorCargaField.setText("5");
-            coordXField.setText("8"); coordYField.setText("5"); coordZField.setText("0"); agregarParticula();
-            
-            origenRutaComboBox.setValue("q1"); destinoRutaComboBox.setValue("q2"); agregarRuta();
-            origenRutaComboBox.setValue("q2"); destinoRutaComboBox.setValue("q3"); agregarRuta();
-            origenRutaComboBox.setValue("q3"); destinoRutaComboBox.setValue("q1"); agregarRuta();
-            
-            nombreParticulaField.clear(); positivaToggle.setSelected(true); valorCargaField.clear();
-            coordXField.clear(); coordYField.clear(); coordZField.clear();
-        });
-
-        // ── Anti-zoom fantasma ───────────────────────────────────────────
-        // Interceptar scroll en el ScrollPane solo cuando NO proviene del SubScene 3D.
-        // El SubScene ya tiene su propio filtro que maneja el zoom y consume el evento.
+        // Anti-zoom fantasma en ScrollPane
         scrollPane.addEventFilter(ScrollEvent.ANY, e -> {
-            if (modo3D) {
-                // Permitir que el SubScene maneje el zoom; solo consumir scroll
-                // que se origine fuera del SubScene (e.g. desde bordes del scrollpane)
-                if (e.getTarget() != generador3D.getSubScene() 
-                    && !generador3D.getSubScene().equals(e.getTarget())) {
-                    e.consume();
-                }
-            }
+            if (modo3D && e.getTarget() != generador3D.getSubScene())
+                e.consume();
         });
-
-        // 2. Consumir todo scroll dentro del TabPane para que no afecte el viewport
         tabPanePrincipal.addEventFilter(ScrollEvent.ANY, Event::consume);
 
-        // 3. Al cambiar de pestaña, guardar y restaurar la posición del scroll
-        //    para evitar "saltos" causados por el re-layout del TabPane
+        // Guardar/restaurar posición del scroll al cambiar de pestaña
         tabPanePrincipal.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
             double h = scrollPane.getHvalue();
             double v = scrollPane.getVvalue();
@@ -296,72 +287,75 @@ public class LeyCoulombController {
             });
         });
 
-        // Listeners para actualizar etiquetas en 3D al mover la cámara
-        generador3D.getCameraRotX().angleProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
-        generador3D.getCameraRotY().angleProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
-        generador3D.getCameraPan().xProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
-        generador3D.getCameraPan().yProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
-        generador3D.getCamera().translateZProperty().addListener((obs,o,n) -> reposicionarEtiquetas3D());
+        // Auto-cargar sistema de prueba
+        javafx.application.Platform.runLater(this::cargarSistemaPrueba);
     }
+
     // =========================================================================
-    // ACCIONES FXML — delegan en los handlers
+    // ACCIONES FXML — sin lógica, solo delegación
     // =========================================================================
-    @FXML private void agregarParticula() {
+
+    @FXML
+    private void agregarParticula() {
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.agregar(modo3D, t, () -> {
-            Nodo ultimo = grafo.getNodos().get(grafo.getNodos().size() - 1);
-            Circle c = nodoCirculos.get(ultimo);
-            if (c != null) hacerNodoArrastrable(c, ultimo);
-            if (modo3D) {
-                generador3D.sincronizarGrafo(grafo, unidadActual);
-            } else {
-                rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
-            }
+            Nodo   ultimo = grafo.getNodos().get(grafo.getNodos().size() - 1);
+            Circle c      = nodoCirculos.get(ultimo);
+            if (c != null) dragHandler.hacerArrastrable(c, ultimo);
+            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+            else        rutaHandler.actualizarVisuales(false, t, unidadActual);
         });
     }
-    @FXML private void eliminarParticula() {
+
+    @FXML
+    private void eliminarParticula() {
         String nombre = particulaEliminarComboBox.getValue();
-        if (calculoHandler.estaCalculando() &&
-            nombre != null && nombre.equals(particulaOrigenComboBox.getValue())) {
-            calculoHandler.cancelar();
-            resultadoFuerzaLabel.setText(" ");
-            resultadoCampoLabel.setText(" ");
-            renderer.limpiarFlechas();
+        if (calculoHandler.estaCalculando()
+                && nombre != null
+                && nombre.equals(particulaOrigenComboBox.getValue())) {
+            limpiarEstadoCalculo();
         }
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.eliminar(() -> {
-            if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
             rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
         });
         if (nombre != null && nombre.equals(particulaOrigenComboBox.getValue()))
             particulaOrigenComboBox.getSelectionModel().clearSelection();
     }
 
-    @FXML private void editarParticula() {
+    @FXML
+    private void editarParticula() {
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.editar(modo3D, t, () -> {
-            if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+            if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
             rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
         });
     }
-    @FXML private void agregarRuta() {
+
+    @FXML
+    private void agregarRuta() {
         rutaHandler.agregar(modo3D);
         CoordenadasTransformador t = crearTransformador();
-        if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+        if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
-    @FXML private void eliminarRuta() {
+
+    @FXML
+    private void eliminarRuta() {
         rutaHandler.eliminar();
         CoordenadasTransformador t = crearTransformador();
-        if(modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
+        if (modo3D) generador3D.sincronizarGrafo(grafo, unidadActual);
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
+
     @FXML private void iniciarCalculo()  { calculoHandler.iniciar(modo3D, unidadActual); }
     @FXML private void cancelarCalculo() { calculoHandler.cancelar(); }
     @FXML private void calcularCampo()   { calculoHandler.ejecutar(calculoHandler.getCalculoVersion(), modo3D, unidadActual); }
     @FXML private void calcularCampoUI() { calculoHandler.ejecutar(calculoHandler.getCalculoVersion(), modo3D, unidadActual); }
 
-    @FXML private void generarCalculosDetallados() {
+    @FXML
+    private void generarCalculosDetallados() {
         if (ultimoResultado == null) {
             mostrarAlerta("Error", "Primero seleccione una partícula y presione 'Calcular'.");
             return;
@@ -369,298 +363,93 @@ public class LeyCoulombController {
         detallesPdfHandler.mostrarTextoDetallado(ultimoResultado, unidadActual);
     }
 
-    @FXML private void generarPDF() {
-        detallesPdfHandler.generarPDF(ultimoResultado, unidadActual);
-    }
+    @FXML private void generarPDF() { detallesPdfHandler.generarPDF(ultimoResultado, unidadActual); }
 
-    @FXML private void toggleModo3D() {
+    @FXML
+    private void toggleModo3D() {
         modo3D = modo3DCheckBox.isSelected();
-        coordZBox.setVisible(modo3D);
-        coordZBox.setManaged(modo3D);
-        modo3DInfoLabel.setVisible(modo3D);
-        modo3DInfoLabel.setManaged(modo3D);
-
-        animacionTab.setDisable(modo3D);
-        if (modo3D && tabPanePrincipal.getSelectionModel().getSelectedItem() == animacionTab) {
-            tabPanePrincipal.getSelectionModel().select(0);
-        }
-
-        // Mostrar/ocultar campo Z de edición
-        if (editCoordZBox != null) {
-            editCoordZBox.setVisible(modo3D);
-            editCoordZBox.setManaged(modo3D);
-        }
-
-        if (calculoHandler.estaCalculando()) calculoHandler.cancelar();
-        renderer.limpiarFlechas();
-        resultadoFuerzaLabel.setText(" ");
-        resultadoCampoLabel.setText(" ");
-        ultimoResultado = null;
-
-        if (modo3D) {
-            // Resetear la cámara 3D a posición predeterminada
-            generador3D.resetCamera();
-            canvasPlano.setVisible(false);
-            canvasPlano.setWidth(0);
-            canvasPlano.setHeight(0);
-            generador3D.getSubScene().setVisible(true);
-            generador3D.getSubScene().setManaged(true);
-            
-            canvasPlano.setVisible(false);
-            canvasPlano.setManaged(false);
-
-            for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene()) {
-
-                    n.setVisible(false);
-                    n.setManaged(false);
-                }
-            }
-            generador3D.sincronizarGrafo(grafo, unidadActual);
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-            // Bloqueo matematico del scroll y rubber banding interno
-            scrollPane.setPannable(false);
-            scrollPane.setHmax(0);
-            scrollPane.setVmax(0);
-            scrollPane.setHvalue(0);
-            scrollPane.setVvalue(0);
-        } else {
-            canvasPlano.setVisible(true);
-            canvasPlano.setManaged(true);
-            canvasPlano.setWidth(2100);
-            canvasPlano.setHeight(1300);
-            renderer.dibujarCuadrante(unidadActual);
-            generador3D.getSubScene().setVisible(false);
-            generador3D.getSubScene().setManaged(false);
-
-            for (javafx.scene.Node n : grafoPane.getChildren()) {
-                if (n != canvasPlano && n != generador3D.getSubScene()) {
-
-                    n.setVisible(true);
-                    n.setManaged(true);
-                }
-            }
-            reposicionarParticulas();
-            CoordenadasTransformador t = crearTransformador();
-            rutaHandler.actualizarVisuales(false, t, unidadActual);
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-            scrollPane.setPannable(true);
-            scrollPane.setHmax(1.0);
-            scrollPane.setVmax(1.0);
-        }
+        modo3DHandler.toggle(modo3D, unidadActual);
     }
-    @FXML private void onAnimacionTabSeleccionada(Event e) {
+
+    @FXML
+    private void onAnimacionTabSeleccionada(Event e) {
         animacionHandler.onTabSeleccionada(
-            ultimoResultado, unidadActual, grafoPane, nodoCirculos,
-            () -> {
-                if (calculoHandler.estaCalculando()) calculoHandler.cancelar();
-                renderer.limpiarFlechas();
-                resultadoFuerzaLabel.setText(" ");
-                resultadoCampoLabel.setText(" ");
-            });
+                ultimoResultado, unidadActual, grafoPane, nodoCirculos,
+                this::limpiarEstadoCalculo);
     }
 
-    @FXML private void siguientePaso()   { animacionHandler.siguiente(ultimoResultado); }
-    @FXML private void anteriorPaso()    { animacionHandler.anterior(ultimoResultado);  }
-    @FXML private void detenerAnimacion(){ animacionHandler.detener(); }
+    @FXML private void siguientePaso()    { animacionHandler.siguiente(ultimoResultado); }
+    @FXML private void anteriorPaso()     { animacionHandler.anterior(ultimoResultado); }
+    @FXML private void detenerAnimacion() { animacionHandler.detener(); }
     @FXML private void reiniciarAnimacion() {
         animacionHandler.reiniciar(ultimoResultado, unidadActual, grafoPane, nodoCirculos);
     }
 
-    @FXML private void Regresar() throws IOException {
-        App.setRoot("Simuladores");
-    }
+    @FXML
+    private void Regresar() throws IOException { App.setRoot("Simuladores"); }
 
     // =========================================================================
-    // ESTADO COMPARTIDO — helpers
+    // HELPERS PRIVADOS
     // =========================================================================
+
+    /** Crea el transformador con el estado actual de canvas y unidad. */
+    private CoordenadasTransformador crearTransformador() {
+        return etiquetaReposicionador.crearTransformador(unidadActual);
+    }
 
     private void cambiarUnidad(UnidadDistancia nueva) {
         unidadActual = nueva;
         CoordenadasTransformador t = crearTransformador();
         rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
-        if (modo3D) {
-            renderer.dibujarCuadrante3D(unidadActual, t);
-        } else {
-            renderer.dibujarCuadrante(unidadActual);
-        }
+        if (modo3D) renderer.dibujarCuadrante3D(unidadActual, t);
+        else        renderer.dibujarCuadrante(unidadActual);
     }
 
-    /**
-     * Proyecta las posiciones 3D a la pantalla 2D y actualiza todas las etiquetas
-     * (partículas, ejes y distancias).
-     */
-    private void reposicionarEtiquetas3D() {
-        if (!modo3D || generador3D == null) return;
-        
-        double scale = generador3D.getScale();
-        javafx.scene.Group world = generador3D.getWorld();
-
-        // 1. Etiquetas de Partículas (Nombre, Carga, Posición)
-        for (Map.Entry<com.usta.models.Nodo, Circle> entry : nodoCirculos.entrySet()) {
-            com.usta.models.Nodo nodo = entry.getKey();
-            
-            javafx.geometry.Point3D p3d = world.localToScene(nodo.getX() * scale, -nodo.getY() * scale, nodo.getZ() * scale);
-            javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
-            
-            if (pLocal != null) {
-                grafoPane.getChildren().stream()
-                    .filter(n -> n instanceof Text && ((Text) n).getText().startsWith(nodo.getNombre() + " "))
-                    .findFirst()
-                    .ifPresent(n -> {
-                        Text txt = (Text) n;
-                        txt.setVisible(true);
-                        txt.setX(pLocal.getX() + 15);
-                        txt.setY(pLocal.getY() - 15);
-                        String nuevaEtiqueta = String.format("%s (%s %s)\nPos: (%.1f, %.1f, %.1f)", 
-                            nodo.getNombre(), nodo.getValorCarga(), nodo.getTipoCarga(), 
-                            nodo.getX(), nodo.getY(), nodo.getZ());
-                        txt.setText(nuevaEtiqueta);
-                    });
-            }
-        }
-
-        // 3. Etiquetas de Distancia (Aristas)
-        for (javafx.scene.Node n : grafoPane.getChildren()) {
-            if (n instanceof Text && n.getUserData() instanceof Object[]) {
-                Object[] data = (Object[]) n.getUserData();
-                if ("arista".equals(data[0])) {
-                    Text txt = (Text) n;
-                    com.usta.models.Arista a = (com.usta.models.Arista) data[1];
-                    com.usta.models.Nodo o = a.getOrigen();
-                    com.usta.models.Nodo d = a.getDestino();
-                    
-                    double mx = (o.getX() + d.getX()) / 2.0;
-                    double my = (o.getY() + d.getY()) / 2.0;
-                    double mz = (o.getZ() + d.getZ()) / 2.0;
-                    
-                    javafx.geometry.Point3D p3d = world.localToScene(mx * scale, -my * scale, mz * scale);
-                    javafx.geometry.Point2D pLocal = grafoPane.sceneToLocal(p3d.getX(), p3d.getY());
-                    
-                    if (pLocal != null) {
-                        txt.setVisible(true);
-                        txt.setX(pLocal.getX());
-                        txt.setY(pLocal.getY());
-                        txt.setText(String.format("%.2f %s", a.getPeso(), unidadActual.getSimbolo()));
-                    }
-                }
-            }
-        }
+    /** Limpia labels de resultado, flechas y cancelar cálculo activo. */
+    private void limpiarEstadoCalculo() {
+        if (calculoHandler.estaCalculando()) calculoHandler.cancelar();
+        renderer.limpiarFlechas();
+        resultadoFuerzaLabel.setText(" ");
+        resultadoCampoLabel.setText(" ");
+        ultimoResultado = null;
     }
-    /**
-     * Recalcula la posición de pantalla de todas las partículas
-     * a partir de sus coordenadas lógicas.
-     */
-    private void reposicionarParticulas() {
-        if (modo3D) {
-            reposicionarEtiquetas3D();
-            return;
-        }
-        CoordenadasTransformador t = crearTransformador();
 
-        for (Map.Entry<Nodo, Circle> entry : nodoCirculos.entrySet()) {
-            Nodo nodo = entry.getKey();
-            Circle c  = entry.getValue();
-            double[] screen = t.logicalToScreen(nodo.getX(), nodo.getY(), nodo.getZ(), modo3D);
-            c.setCenterX(screen[0]);
-            c.setCenterY(screen[1]);
-            // Actualizar etiqueta de texto
-            grafoPane.getChildren().stream()
-                .filter(n -> n instanceof Text && ((Text) n).getText().startsWith(nodo.getNombre() + " "))
-                .findFirst()
-                .ifPresent(n -> {
-                    Text txt = (Text) n;
-                    txt.setX(screen[0] - 4);
-                    txt.setY(screen[1] + 4);
-                    
-                    // Asegurar que el contenido refleje si estamos en 3D (mostrando Z) o 2D (ocultando Z)
-                    String nuevaEtiqueta = modo3D
-                        ? nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ") z=" + String.format("%.1f", nodo.getZ())
-                        : nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ")";
-                    txt.setText(nuevaEtiqueta);
-                });
-        }
+    private void cargarSistemaPrueba() {
+        nombreParticulaField.setText("q1"); positivaToggle.setSelected(true);
+        valorCargaField.setText("4"); coordXField.setText("2"); coordYField.setText("5"); coordZField.setText("0");
+        agregarParticula();
+
+        nombreParticulaField.setText("q2"); negativaToggle.setSelected(true);
+        valorCargaField.setText("3"); coordXField.setText("5"); coordYField.setText("2"); coordZField.setText("0");
+        agregarParticula();
+
+        nombreParticulaField.setText("q3"); positivaToggle.setSelected(true);
+        valorCargaField.setText("5"); coordXField.setText("8"); coordYField.setText("5"); coordZField.setText("0");
+        agregarParticula();
+
+        origenRutaComboBox.setValue("q1"); destinoRutaComboBox.setValue("q2"); agregarRuta();
+        origenRutaComboBox.setValue("q2"); destinoRutaComboBox.setValue("q3"); agregarRuta();
+        origenRutaComboBox.setValue("q3"); destinoRutaComboBox.setValue("q1"); agregarRuta();
+
+        nombreParticulaField.clear(); positivaToggle.setSelected(true);
+        valorCargaField.clear(); coordXField.clear(); coordYField.clear(); coordZField.clear();
+
+        scrollPane.setHvalue(0);
+        scrollPane.setVvalue(1.0);
     }
-    /**
-     * Hace arrastrable un nodo en el plano.
-     *
-     * - Click izquierdo + arrastrar → mueve en X/Y (Z constante).
-     * - Shift + arrastrar vertical → mueve en Z (X/Y constantes, solo en modo 3D).
-     */
-    private void hacerNodoArrastrable(Circle circulo, Nodo nodo) {
-        final double[] delta = new double[4]; // [0]=offsetX, [1]=offsetY, [2]=startLogZ, [3]=startScreenY
 
-        circulo.setOnMousePressed((MouseEvent me) -> {
-            if (me.getButton() != MouseButton.PRIMARY) return;
-            delta[0] = circulo.getCenterX() - me.getX();
-            delta[1] = circulo.getCenterY() - me.getY();
-            delta[2] = nodo.getZ();
-            delta[3] = me.getY();
-            circulo.setCursor(Cursor.MOVE);
-            me.consume();
-        });
-
-        circulo.setOnMouseReleased(me -> {
-            circulo.setCursor(Cursor.HAND);
-            me.consume();
-        });
-
-        circulo.setOnMouseDragged((MouseEvent me) -> {
-            if (me.getButton() != MouseButton.PRIMARY) return;
-
-            CoordenadasTransformador t = crearTransformador();
-
-            if (modo3D && me.isShiftDown()) {
-                // ── Shift + arrastrar → mover en Z ──────────────────────
-                double dy = me.getY() - delta[3];
-                double newZ = delta[2] - dy / t.getPxPorUnidad();
-                newZ = Math.max(0, Math.min(10, newZ));
-                nodo.setZ(newZ);
-            } else {
-                // ── Arrastrar normal → mover en X/Y ─────────────────────
-                double nx = me.getX() + delta[0];
-                double ny = me.getY() + delta[1];
-
-                double[] logCoords = t.screenToLogical(nx, ny, nodo.getZ(), modo3D);
-                nodo.setX(logCoords[0]);
-                nodo.setY(logCoords[1]);
-            }
-
-            // Recalcular posición de pantalla y actualizar Circle
-            double[] screen = t.logicalToScreen(nodo.getX(), nodo.getY(), nodo.getZ(), modo3D);
-            circulo.setCenterX(screen[0]);
-            circulo.setCenterY(screen[1]);
-
-            // Actualizar aristas
-            rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
-
-            // Actualizar etiqueta de texto
-            grafoPane.getChildren().stream()
-                .filter(n -> n instanceof Text &&
-                    ((Text) n).getText().startsWith(nodo.getNombre() + " "))
-                .findFirst()
-                .ifPresent(n -> {
-                    Text txt = (Text) n;
-                    txt.setX(screen[0] - 4);
-                    txt.setY(screen[1] + 4);
-
-                    // Actualizar el texto para que coincida con el modo actual (ocultar Z en 2D)
-                    String nuevaEtiqueta = modo3D
-                        ? nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ") z=" + String.format("%.1f", nodo.getZ())
-                        : nodo.getNombre() + " (" + nodo.getValorCarga() + ") (" + nodo.getTipoCarga() + ")";
-                    txt.setText(nuevaEtiqueta);
-                });
-
-            me.consume();
-        });
-
-        circulo.setOnMouseEntered(me -> circulo.setCursor(Cursor.HAND));
+    private void mostrarAlerta(String titulo, String mensaje) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(titulo);
+        a.setHeaderText(" ");
+        a.setContentText(mensaje);
+        a.showAndWait();
     }
+
     // =========================================================================
     // ENLACE DE CAMPOS FXML A HANDLERS
     // =========================================================================
+
     private void enlazarCamposParticula() {
         particulaHandler.nombreParticulaField    = nombreParticulaField;
         particulaHandler.valorCargaField         = valorCargaField;
@@ -678,8 +467,8 @@ public class LeyCoulombController {
     }
 
     private void enlazarCamposRuta() {
-        rutaHandler.origenRutaComboBox   = origenRutaComboBox;
-        rutaHandler.destinoRutaComboBox  = destinoRutaComboBox;
+        rutaHandler.origenRutaComboBox  = origenRutaComboBox;
+        rutaHandler.destinoRutaComboBox = destinoRutaComboBox;
         rutaHandler.eliminarRutaComboBox = eliminarRutaComboBox;
     }
 
@@ -692,22 +481,19 @@ public class LeyCoulombController {
         calculoHandler.resultadoFuerzaLabel       = resultadoFuerzaLabel;
         calculoHandler.resultadoCampoLabel        = resultadoCampoLabel;
     }
+
     private void enlazarCamposDetalles() {
         detallesPdfHandler.calculosDetalladosTextArea = calculosDetalladosTextArea;
     }
+
     private void enlazarCamposAnimacion() {
-        animacionHandler.animacionTab         = animacionTab;
-        animacionHandler.pasoIndicadorLabel   = pasoIndicadorLabel;
-        animacionHandler.pasoDescripcionLabel = pasoDescripcionLabel;
-        animacionHandler.barraProgresoLabel   = barraProgresoLabel;
-        animacionHandler.btnAnteriorPaso      = btnAnteriorPaso;
-        animacionHandler.btnSiguientePaso     = btnSiguientePaso;
+        animacionHandler.animacionTab          = animacionTab;
+        animacionHandler.pasoIndicadorLabel    = pasoIndicadorLabel;
+        animacionHandler.pasoDescripcionLabel  = pasoDescripcionLabel;
+        animacionHandler.barraProgresoLabel    = barraProgresoLabel;
+        animacionHandler.btnAnteriorPaso       = btnAnteriorPaso;
+        animacionHandler.btnSiguientePaso      = btnSiguientePaso;
         animacionHandler.btnReiniciarAnimacion = btnReiniciarAnimacion;
-        animacionHandler.btnDetenerAnimacion  = btnDetenerAnimacion;
-    }
-    private void mostrarAlerta(String titulo, String mensaje) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(titulo); a.setHeaderText(" "); a.setContentText(mensaje);
-        a.showAndWait();
+        animacionHandler.btnDetenerAnimacion   = btnDetenerAnimacion;
     }
 }

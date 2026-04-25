@@ -31,7 +31,22 @@ public class Arista {
             destino.getNombre() + "-" + origen.getNombre();
     }
     public boolean esIgual(Arista otra) {
+        if (otra == null) return false;
         return (this.origen.equals(otra.origen) && this.destino.equals(otra.destino) ||
                 this.origen.equals(otra.destino) && this.destino.equals(otra.origen));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Arista otra = (Arista) obj;
+        return esIgual(otra);
+    }
+
+    @Override
+    public int hashCode() {
+        // Usamos una suma simétrica para que el orden origen/destino no importe
+        return origen.hashCode() + destino.hashCode();
     }
 }

@@ -8,9 +8,6 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
-/**
- * JavaFX App*/   
 public class App extends Application {
     
     private static Scene scene;
@@ -21,12 +18,10 @@ public class App extends Application {
         stage.setScene(scene);
         stage.setTitle("EduElectric- Simuladores de Física");
 
-        // ✅ Establecer el ícono/logo de la aplicación
         stage.getIcons().add(new Image(App.class.getResourceAsStream("/com/usta/views/img/logoFinal.png")));
 
-        // ✅ Mostrar en pantalla completa o maximizado
-        // stage.setFullScreen(true); // ← opción fullscreen total (sin barra)
-        stage.setMaximized(true);    // ← opción ventana maximizada (con barra de título)
+       
+        stage.setMaximized(true); 
 
         stage.show();
     }

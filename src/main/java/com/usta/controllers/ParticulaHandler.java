@@ -134,8 +134,7 @@ public class ParticulaHandler {
                 do {
                     logX = minLogX + random.nextDouble() * (maxLogX - minLogX);
                     logY = minLogY + random.nextDouble() * (maxLogY - minLogY);
-                    logX = Math.max(0.5, logX);
-                    logY = Math.max(0.5, logY);
+                    
                     double[] scr = t.logicalToScreen(logX, logY, 0, false);
                     sup = verificarSuperposicionScreen(scr[0], scr[1]);
                     intentos++;
@@ -223,7 +222,13 @@ public class ParticulaHandler {
                     mostrarAlerta("Error", "Ya existe una partícula con ese nombre."); return;
                 }
             }
+            
+            // IMPORTANTE: Dado que Nodo usa el nombre para hashCode/equals, 
+            // debemos removerlo del mapa antes de cambiar el nombre y reinsertarlo después.
+            Circle c = nodoCirculos.remove(nodo);
             nodo.setNombre(nuevoNombre);
+            if (c != null) nodoCirculos.put(nodo, c);
+
             nombresParticulas.remove(nombreActual);
             nombresParticulas.add(nuevoNombre);
             nombreFinal = nuevoNombre;
