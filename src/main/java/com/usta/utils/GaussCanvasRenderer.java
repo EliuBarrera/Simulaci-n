@@ -184,6 +184,10 @@ public class GaussCanvasRenderer {
                 gc.closePath();
                 gc.stroke();
             }
+            // Proyecciones 2D de figuras 3D
+            case ESFERA     -> gc.strokeOval(cx - p1, cy - p1, 2 * p1, 2 * p1);
+            case CILINDRO   -> gc.strokeRect(cx - p1, cy - p2, 2 * p1, 2 * p2);
+            case CAJA       -> gc.strokeRect(cx - p1, cy - p2, 2 * p1, 2 * p2);
         }
     }
 
@@ -201,6 +205,10 @@ public class GaussCanvasRenderer {
                 gc.closePath();
                 gc.fill();
             }
+            // Proyecciones 2D de figuras 3D
+            case ESFERA     -> gc.fillOval(cx - p1, cy - p1, 2 * p1, 2 * p1);
+            case CILINDRO   -> gc.fillRect(cx - p1, cy - p2, 2 * p1, 2 * p2);
+            case CAJA       -> gc.fillRect(cx - p1, cy - p2, 2 * p1, 2 * p2);
         }
     }
 
