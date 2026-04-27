@@ -8,149 +8,170 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?><?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ToggleGroup?>
 
-<AnchorPane fx:id="rootPane" stylesheets="@css/Style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.usta.controllers.PotencialElectricoController">
+<!--
+  Simulador Ley de Gauss 2D
+  Hereda estilos de @css/Style.css (mismo CSS del proyecto principal)
+-->
+
+<HBox prefHeight="640.0" prefWidth="1200.0" stylesheets="@css/Style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.usta.controllers.PotencialElectrico">
   <children>
-    <HBox AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-      <children>
-    <TabPane fx:id="tabPanePrincipal" maxWidth="230.0" minWidth="230.0" tabClosingPolicy="UNAVAILABLE">
-      <tabs>
 
-        <!-- ── TAB: CARGAS (Sincronizado con Coulomb) ────────────────────── -->
-        <Tab style="-fx-background-color: #14C5D9;" text="Cargas">
-          <content>
-            <AnchorPane style="-fx-background-color: #14C5D9;">
-              <children>
-                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                  <content>
-                    <VBox spacing="10" style="-fx-background-color: #14C5D9;">
-                      <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
-                      
-                      <Label text="Agregar Carga Fuente" style="-fx-font-weight: bold;" />
-                      <TextField fx:id="nombreParticulaField" promptText="Nombre (ej. q1)" />
-                      <HBox spacing="5" styleClass="dual-button-container">
-                        <ToggleButton fx:id="positivaToggle" prefWidth="100" styleClass="dual-button-left, dual-button-positive" text="+" />
-                        <ToggleButton fx:id="negativaToggle" prefWidth="100" styleClass="dual-button-right, dual-button-negative" text="-" />
-                      </HBox>
-                      <TextField fx:id="valorCargaField" promptText="Valor de carga (µC)" />
-                      
-                      <Separator />
-                      <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Coordenadas Lógicas" />
-                      <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label prefWidth="15" text="X:" />
-                        <TextField fx:id="coordXField" prefWidth="65" />
-                        <Label prefWidth="15" text="Y:" />
-                        <TextField fx:id="coordYField" prefWidth="65" />
-                      </HBox>
-                      <HBox fx:id="coordZBox" alignment="CENTER_LEFT" managed="false" spacing="10" visible="false">
-                        <Label prefWidth="15" text="Z:" />
-                        <TextField fx:id="coordZField" prefWidth="65" />
-                      </HBox>
-                      <Button onAction="#agregarParticula" prefWidth="200" text="Añadir Partícula" />
-                      
-                      <Separator />
-                      <Label text="Gestión de Cargas" style="-fx-font-weight: bold;" />
-                      <ComboBox fx:id="particulaEditarComboBox" prefWidth="200" promptText="Seleccionar Carga" />
-                      <TextField fx:id="particulaEditarField" promptText="Renombrar..." />
-                      <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label prefWidth="15" text="X:" />
-                        <TextField fx:id="editCoordXField" prefWidth="65" />
-                        <Label prefWidth="15" text="Y:" />
-                        <TextField fx:id="editCoordYField" prefWidth="65" />
-                      </HBox>
-                      <Button onAction="#editarParticula" prefWidth="200" text="Aplicar Cambios" />
-
-                      <Separator />
-                      <ComboBox fx:id="particulaEliminarComboBox" prefWidth="200" promptText="Eliminar Partícula" />
-                      <Button onAction="#eliminarParticula" prefWidth="200" style="-fx-background-color: #FF6B6B; -fx-text-fill: white;" text="Eliminar Selección" />
-                      
-                      <Separator />
-                      <Button onAction="#Regresar" prefWidth="200" style="-fx-background-color: #455a64; -fx-text-fill: white;" text="Regresar al Menú" />
-                    </VBox>
-                  </content>
-                </ScrollPane>
-              </children>
-            </AnchorPane>
-          </content>
-        </Tab>
-
-        <!-- ── TAB: CÁLCULOS (Sincronizado con Coulomb) ─────────────────── -->
-        <Tab style="-fx-background-color: #B3F0FF;" text="Cálculos">
-          <content>
-            <AnchorPane style="-fx-background-color: #B3F0FF;">
-              <children>
-                <VBox spacing="15" style="-fx-background-color: #B3F0FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                  <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
-                  <children>
-                    <Label text="Análisis de Potencial" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
-                    
-                    <Label text="Punto de Evaluación P:" />
-                    <ComboBox fx:id="puntoPruebaComboBox" prefWidth="190" promptText="Elegir Sonda" />
-                    
-                    <Label text="Unidad de Medida:" />
-                    <ComboBox fx:id="unidadDistanciaComboBox" prefWidth="190" />
-                    
-                    <Separator />
-                    <CheckBox fx:id="modo3DCheckBox" onAction="#toggleModo3D" style="-fx-font-weight: bold;" text="Activar Modo 3D" />
-                    <CheckBox fx:id="mostrarLineasCheckBox" selected="true" text="Mostrar Líneas de Campo" onAction="#actualizarVisuales" />
-                    
-                    <Separator />
-                    <VBox spacing="8" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #0288d1; -fx-border-width: 2; -fx-border-radius: 10;">
-                        <children>
-                            <Label text="POTENCIAL TOTAL (V):" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #0288d1;" />
-                            <Label fx:id="resultadoPotencialLabel" text="-" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #01579b;" />
-                        </children>
-                    </VBox>
-
-                    <Button onAction="#calcularPotencialBtn" prefWidth="190" style="-fx-background-color: #0288d1; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;" text="CALCULAR" />
-                    
-                    <Label text="Fórmula: V = Σ k·q / r" style="-fx-font-style: italic; -fx-alignment: center; -fx-pref-width: 190;" />
-                  </children>
-                </VBox>
-              </children>
-            </AnchorPane>
-          </content>
-        </Tab>
-
-        <!-- ── TAB: DETALLES ────────────────────────────────────────────── -->
-        <Tab style="-fx-background-color: #D0F5FF;" text="Detalles">
-          <content>
-            <AnchorPane style="-fx-background-color: #D0F5FF;">
-              <children>
-                <VBox spacing="10" style="-fx-background-color: #D0F5FF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                  <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
-                  <children>
-                    <Label style="-fx-font-weight: bold;" text="Desglose Matemático" />
-                    <TextArea fx:id="calculosDetalladosTextArea" editable="false" style="-fx-font-family: 'Courier New'; -fx-font-size: 11px; -fx-control-inner-background: #f8f9fa;" wrapText="true" VBox.vgrow="ALWAYS" />
-                    <Button onAction="#generarPDF" prefWidth="200" style="-fx-background-color: #ef5350; -fx-text-fill: white; -fx-font-weight: bold;" text="Exportar a PDF" />
-                  </children>
-                </VBox>
-              </children>
-            </AnchorPane>
-          </content>
-        </Tab>
-
-      </tabs>
-    </TabPane>
-
-    <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" HBox.hgrow="ALWAYS">
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- PANEL LATERAL IZQUIERDO                                               -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <ScrollPane fitToWidth="true" maxWidth="240.0" minWidth="240.0" prefWidth="240.0" style="-fx-background-color: #e0f7fa;">
       <content>
-        <AnchorPane fx:id="grafoPane">
+        <VBox spacing="10" style="-fx-background-color: #e0f7fa;">
+          <padding><Insets bottom="20" left="14" right="14" top="20" /></padding>
           <children>
-            <Canvas fx:id="canvasPlano" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+
+            <!-- ── Título ──────────────────────────────────────────────────── -->
+            <Label style="-fx-font-size: 15px; -fx-font-weight: bold;                           -fx-text-fill: #004d40;" text="Ley de Gauss — 2D" />
+            <Label style="-fx-font-size: 10px; -fx-text-fill: #00695c;" text="Simulador interactivo de flujo eléctrico" wrapText="true" />
+
+            <Separator />
+            <CheckBox fx:id="chkModo3D" onAction="#onToggleModo3D" style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #004d40;" text="Modo 3D" />
+
+            <Separator />
+
+            <!-- ── Figura cargada ──────────────────────────────────────────── -->
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #004d40;" text="1. Figura con carga" />
+
+            <Label style="-fx-font-size: 11px;" text="Forma:" />
+            <ComboBox fx:id="figuraCargadaCombo" prefWidth="210" />
+
+            <HBox spacing="10">
+               <RadioButton fx:id="optCargaExacta" text="Q Exacta" selected="true" style="-fx-font-size: 10px;" />
+               <RadioButton fx:id="optDensidad" text="Densidad" style="-fx-font-size: 10px;" />
+            </HBox>
+
+            <Label fx:id="lblCargaInfo" style="-fx-font-size: 11px;" text="Carga Q (µC):" />
+            <TextField fx:id="cargaField" promptText="ej: 5.0" />
+
+            <VBox fx:id="panelDimensiones3DFigura" managed="false" visible="false" spacing="5">
+               <Label style="-fx-font-size: 11px;" text="Centro (X,Y,Z):" />
+               <HBox spacing="5">
+                  <TextField fx:id="figCxField" prefWidth="55" promptText="X" />
+                  <TextField fx:id="figCyField" prefWidth="55" promptText="Y" />
+                  <TextField fx:id="figCzField" prefWidth="55" promptText="Z" />
+               </HBox>
+               <Label style="-fx-font-size: 11px;" text="Dim. (r/L1, L2, h/L3):" />
+               <HBox spacing="5">
+                  <TextField fx:id="figP1Field" prefWidth="55" promptText="p1" />
+                  <TextField fx:id="figP2Field" prefWidth="55" promptText="p2" />
+                  <TextField fx:id="figP3Field" prefWidth="55" promptText="p3" />
+               </HBox>
+            </VBox>
+
+            <Label style="-fx-font-size: 11px;" text="Signo:" />
+            <ComboBox fx:id="signoCargaCombo" prefWidth="210" />
+
+            <Button onAction="#onIniciarDibujoFigura" prefWidth="210" text="Dibujar figura →" />
+
+            <Label fx:id="lblEstadoFigura" style="-fx-font-size: 10px; -fx-text-fill: #00695c;                           -fx-background-color: #b2ebf2;                           -fx-background-radius: 6;                           -fx-padding: 6 8 6 8;" text="Sin figura" wrapText="true" />
+
+            <Separator />
+
+            <!-- ── Superficie Gaussiana ────────────────────────────────────── -->
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #004d40;" text="2. Superficie Gaussiana" />
+
+            <Label style="-fx-font-size: 11px;" text="Forma:" />
+            <ComboBox fx:id="superficieCombo" prefWidth="210" />
+
+            <VBox fx:id="panelDimensiones3DSuperficie" managed="false" visible="false" spacing="5">
+               <Label style="-fx-font-size: 11px;" text="Centro (X,Y,Z):" />
+               <HBox spacing="5">
+                  <TextField fx:id="supCxField" prefWidth="55" promptText="X" />
+                  <TextField fx:id="supCyField" prefWidth="55" promptText="Y" />
+                  <TextField fx:id="supCzField" prefWidth="55" promptText="Z" />
+               </HBox>
+               <Label style="-fx-font-size: 11px;" text="Dim. (r/L1, L2, h/L3):" />
+               <HBox spacing="5">
+                  <TextField fx:id="supP1Field" prefWidth="55" promptText="p1" />
+                  <TextField fx:id="supP2Field" prefWidth="55" promptText="p2" />
+                  <TextField fx:id="supP3Field" prefWidth="55" promptText="p3" />
+               </HBox>
+            </VBox>
+
+            <Button fx:id="btnConfirmarSuperficie" onAction="#onIniciarDibujoSuperficie" prefWidth="210" text="Dibujar superficie →" />
+
+            <Label fx:id="lblEstadoSuperficie" style="-fx-font-size: 10px; -fx-text-fill: #00695c;                           -fx-background-color: #b2ebf2;                           -fx-background-radius: 6;                           -fx-padding: 6 8 6 8;" text="Sin superficie" wrapText="true" />
+
+            <Separator />
+
+            <!-- ── Acciones ────────────────────────────────────────────────── -->
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #004d40;" text="3. Calcular" />
+
+            <Button fx:id="btnCalcular" disable="true" onAction="#onCalcular" prefWidth="210" text="Calcular flujo" />
+
+            <CheckBox fx:id="chkLineasCampo" disable="true" style="-fx-font-size: 11px; -fx-text-fill: #004d40;" text="Ver líneas de campo" />
+
+            <Button fx:id="btnLimpiar" onAction="#onLimpiar" prefWidth="210" style="-fx-background-color: linear-gradient(to bottom,#ef5350,#c62828);                            -fx-text-fill: white; -fx-font-weight: bold;                            -fx-background-radius: 10; -fx-padding: 10 20;" text="Limpiar todo" />
+
+            <Separator />
+
+            <!-- ── Resultados ──────────────────────────────────────────────── -->
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #004d40;" text="Resultados" />
+
+            <GridPane hgap="6" vgap="6">
+              <columnConstraints>
+                <ColumnConstraints prefWidth="110" />
+                <ColumnConstraints hgrow="ALWAYS" prefWidth="90" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="22" />
+                <RowConstraints minHeight="22" />
+                <RowConstraints minHeight="22" />
+                <RowConstraints minHeight="22" />
+              </rowConstraints>
+              <children>
+                <Label style="-fx-font-size: 11px; -fx-text-fill: #004d40;" text="Q encerrada:" GridPane.rowIndex="0" />
+                <Label style="-fx-font-size: 11px; -fx-text-fill: #004d40;" text="Flujo Φ:" GridPane.rowIndex="1" />
+                <Label style="-fx-font-size: 11px; -fx-text-fill: #004d40;" text="Campo E (prom)::" GridPane.rowIndex="2" />
+                <Label style="-fx-font-size: 11px; -fx-text-fill: #004d40;" text="Fracción enc.:" GridPane.rowIndex="3" />
+
+                <Label fx:id="lblQenc" style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #00695c;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label fx:id="lblFlujo" style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #00695c;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <Label fx:id="lblCampoE" style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #00695c;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <Label fx:id="lblFraccion" style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #00695c;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+              </children>
+            </GridPane>
+
+            <Separator />
+
+            <!-- ── Procedimiento detallado ─────────────────────────────────── -->
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #004d40;" text="Procedimiento" />
+            <TextArea fx:id="txtProcedimiento" editable="false" prefHeight="220" style="-fx-font-family: 'Courier New'; -fx-font-size: 9px;                              -fx-background-color: white;" wrapText="true" />
+              <Button onAction="#Regresar" fx:id="CancelarButton" text="Salir" /> 
+
+          </children>
+        </VBox>
+      </content>
+        
+    </ScrollPane>
+
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- CANVAS PRINCIPAL                                                       -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <ScrollPane fx:id="gaussScrollPane" fitToHeight="true" fitToWidth="true" HBox.hgrow="ALWAYS">
+      <content>
+        <AnchorPane fx:id="gaussPane" style="-fx-background-color: white;">
+          <children>
+            <Canvas fx:id="canvasGauss" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0" />
           </children>
         </AnchorPane>
       </content>
     </ScrollPane>
-      </children>
-    </HBox>
+
   </children>
-</AnchorPane>
+</HBox>
