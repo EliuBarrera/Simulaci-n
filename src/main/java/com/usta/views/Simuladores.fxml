@@ -97,7 +97,7 @@
                             <fill>
                                 <ImagePattern>
                                     <image>
-                                        <Image url="@img/ico.png" />
+                                        <Image url="@img/potencialElectrico.png" />
                                     </image>
                                 </ImagePattern>
                             </fill>
