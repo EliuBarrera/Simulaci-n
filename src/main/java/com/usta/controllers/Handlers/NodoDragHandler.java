@@ -26,7 +26,6 @@ import java.util.function.Supplier;
 public class NodoDragHandler {
 
     private final Pane grafoPane;
-    private final Map<Nodo, Circle> nodoCirculos;
     private final RutaHandler rutaHandler;
 
     /** Proporciona el transformador actualizado en cada evento. */
@@ -41,7 +40,6 @@ public class NodoDragHandler {
                            Supplier<CoordenadasTransformador> transformadorSupplier,
                            BooleanSupplier modo3DSupplier) {
         this.grafoPane             = grafoPane;
-        this.nodoCirculos          = nodoCirculos;
         this.rutaHandler           = rutaHandler;
         this.transformadorSupplier = transformadorSupplier;
         this.modo3DSupplier        = modo3DSupplier;
