@@ -9,6 +9,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
 
 <ScrollPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -49,7 +50,11 @@
                                pickOnBounds="true" />
 
                     <!-- Fórmula principal -->
-                    <Label text="V = k · q / r" styleClass="formulaLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #00695c;"/>
+                    <ImageView fitHeight="100" preserveRatio="true">
+                        <image>
+                            <Image url="@img/potencialElectricoFormula.png" />
+                        </image>
+                    </ImageView>
 
                     <!-- Variables -->
                     <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">

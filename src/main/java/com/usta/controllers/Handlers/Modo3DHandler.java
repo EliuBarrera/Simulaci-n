@@ -161,8 +161,8 @@ public class Modo3DHandler {
         // Restaurar canvas 2D
         canvasPlano.setVisible(true);
         canvasPlano.setManaged(true);
-        canvasPlano.setWidth(5000);
-        canvasPlano.setHeight(5000);
+        canvasPlano.setWidth(2080);
+        canvasPlano.setHeight(1580);
         renderer.dibujarCuadrante(unidadActual);
 
         // Ocultar SubScene 3D
