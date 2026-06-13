@@ -78,11 +78,11 @@ public class ProcedimientoBuilder {
     private static void seccionCampo(StringBuilder sb, ResultadoGauss res) {
         sb.append("CAMPO ELÉCTRICO PROMEDIO\n");
         sb.append("──────────────────────────────────────────────────\n");
-        sb.append(String.format("  Perímetro superficie: %.4f m%n",
-            res.getPerimetroSuperficie()));
-        sb.append("  E = Φ / Perímetro\n");
+        sb.append(String.format("  Área superficial    : %.4f m²%n",
+            res.getAreaSuperficie()));
+        sb.append("  E = Φ / A\n");
         sb.append(String.format("  E = %.6e / %.4f%n",
-            res.getFlujoElectrico(), res.getPerimetroSuperficie()));
+            res.getFlujoElectrico(), res.getAreaSuperficie()));
         sb.append(String.format("  E = %.6e N/C%n%n",
             res.getCampoPromedio()));
     }

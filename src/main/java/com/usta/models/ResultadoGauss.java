@@ -22,26 +22,26 @@ public class ResultadoGauss {
     private final double cargaEncerradaCoulombs;   // Q_enc en C
     private final double fraccionEncerrada;        // 0..1 (qué % de la figura queda dentro)
     private final double flujoElectrico;           // Φ = Q_enc / ε₀  (N·m²/C en 3D, analógico)
-    private final double campoPromedio;            // E = Φ / perimetro
+    private final double campoPromedio;            // E = Φ / A_superficie
 
-    private final double perimetroSuperficie;      // en unidades reales
+    private final double areaSuperficie;           // en unidades reales (m²)
     private final boolean figuraDentro;            // true si la figura está completamente dentro
 
     public ResultadoGauss(FiguraGauss figuraCargada,
                            FiguraGauss superficieGaussiana,
                            double cargaEncerradaCoulombs,
                            double fraccionEncerrada,
-                           double perimetroSuperficie,
+                           double areaSuperficie,
                            boolean figuraDentro) {
         this.figuraCargada          = figuraCargada;
         this.superficieGaussiana    = superficieGaussiana;
         this.cargaEncerradaCoulombs = cargaEncerradaCoulombs;
         this.fraccionEncerrada      = fraccionEncerrada;
-        this.perimetroSuperficie    = perimetroSuperficie;
+        this.areaSuperficie         = areaSuperficie;
         this.figuraDentro           = figuraDentro;
         this.flujoElectrico         = cargaEncerradaCoulombs / EPSILON_0;
-        this.campoPromedio          = perimetroSuperficie > 0
-            ? Math.abs(flujoElectrico) / perimetroSuperficie
+        this.campoPromedio          = areaSuperficie > 0
+            ? Math.abs(flujoElectrico) / areaSuperficie
             : 0;
     }
 
@@ -52,7 +52,7 @@ public class ResultadoGauss {
     public double getFraccionEncerrada()             { return fraccionEncerrada; }
     public double getFlujoElectrico()                { return flujoElectrico; }
     public double getCampoPromedio()                 { return campoPromedio; }
-    public double getPerimetroSuperficie()           { return perimetroSuperficie; }
+    public double getAreaSuperficie()               { return areaSuperficie; }
     public boolean isFiguraDentro()                  { return figuraDentro; }
     public double getCargaTotalCoulombs()            { return figuraCargada.getCargaEnCoulombs(); }
 

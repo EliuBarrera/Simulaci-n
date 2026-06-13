@@ -62,26 +62,43 @@ public class FiguraGauss {
     }
 
     /**
-     * Calcula el perímetro / longitud / área perimetral de la superficie.
+     * Calcula el área superficial de la superficie gaussiana cerrada.
+     * Para la Ley de Gauss: E = Φ / A_superficie
+     *
+     * Figuras 2D se tratan como su análogo 3D cerrado:
+     *   CIRCULO    → esfera  (4πr²)
+     *   CUADRADO   → cubo    (6·(2l)²)
+     *   RECTANGULO → caja    (2·(ab + ac + bc)), con c = min(a,b)
+     *   TRIANGULO  → prisma triangular aproximado
+     *
+     * Figuras 3D ya son superficies cerradas reales.
      */
-    public double calcularPerimetro(double pxPorUnidad) {
+    public double calcularAreaSuperficial(double pxPorUnidad) {
         double p1u = param1 / pxPorUnidad;
         double p2u = param2 / pxPorUnidad;
         double p3u = param3 / pxPorUnidad;
 
         return switch (tipo) {
-            case CIRCULO    -> 2 * Math.PI * p1u;
-            case RECTANGULO -> 2 * (2 * p1u + 2 * p2u);
-            case CUADRADO   -> 4 * (2 * p1u);
+            case CIRCULO    -> 4 * Math.PI * Math.pow(p1u, 2);   // esfera equivalente
+            case CUADRADO   -> 6 * Math.pow(2 * p1u, 2);         // cubo equivalente
+            case RECTANGULO -> {
+                double a = 2 * p1u;
+                double b = 2 * p2u;
+                double c = Math.min(a, b);  // profundidad = dimensión menor
+                yield 2 * (a * b + a * c + b * c);
+            }
             case TRIANGULO  -> {
-                double b = 2 * p1u;
+                double base = 2 * p1u;
                 double h = p2u;
                 double lado = Math.hypot(p1u, h);
-                yield b + 2 * lado;
+                double areaTriangulo = 0.5 * base * h;
+                double perimetroTri = base + 2 * lado;
+                double profundidad = Math.min(base, h);
+                yield 2 * areaTriangulo + perimetroTri * profundidad;
             }
-            case ESFERA     -> 4 * Math.PI * Math.pow(p1u, 2); // area superficial
-            case CILINDRO   -> 2 * Math.PI * p1u * (p1u + p2u); // area superficial
-            case CAJA       -> 2 * ((2*p1u)*(2*p2u) + (2*p1u)*(2*p3u) + (2*p2u)*(2*p3u)); // area superficial
+            case ESFERA     -> 4 * Math.PI * Math.pow(p1u, 2);
+            case CILINDRO   -> 2 * Math.PI * p1u * (p1u + p2u);
+            case CAJA       -> 2 * ((2*p1u)*(2*p2u) + (2*p1u)*(2*p3u) + (2*p2u)*(2*p3u));
         };
     }
 

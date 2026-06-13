@@ -34,12 +34,12 @@ public class GaussCalculator {
 
         double fraccion = calcularFraccionEncerrada(figuraCargada, superficieGaussiana);
         double qEnc     = figuraCargada.getCargaEnCoulombs() * fraccion;
-        double perim    = superficieGaussiana.calcularPerimetro(pxPorUnidad);
+        double areaSup  = superficieGaussiana.calcularAreaSuperficial(pxPorUnidad);
         boolean dentroCompleto = fraccion >= 0.999;
 
         return new ResultadoGauss(
             figuraCargada, superficieGaussiana,
-            qEnc, fraccion, perim, dentroCompleto);
+            qEnc, fraccion, areaSup, dentroCompleto);
     }
 
     /**
