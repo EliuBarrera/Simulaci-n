@@ -204,8 +204,7 @@ public class UnifiedFlowController {
         // Cambiar dinámicamente las opciones del menú de figuras
         figuraComboBox.getItems().clear();
         if (modo3D) {
-            figuraComboBox.getItems().addAll("Placa Rectangular (3D)", "Placa Triangular (3D)", "Placa Circular (3D)",
-                    "Cilindro (3D)", "Cubo / Prisma (3D)");
+            figuraComboBox.getItems().addAll("Esfera", "Cubo", "Cilindro", "Prisma Rectangular", "Prisma Triangular", "Prisma Hexagonal", "Pirámide", "Cono");
         } else {
             figuraComboBox.getItems().addAll("Rectángulo", "Triángulo", "Circunferencia");
         }
@@ -255,19 +254,21 @@ public class UnifiedFlowController {
         }
     }
 
-    /** Writes base×scale into dimension fields and resizes the figure image. */
     private void applyScale(double scale) {
         String figura = figuraComboBox.getValue();
         if (figura == null)
             return;
-        switch (figura) {
-            case "Circunferencia":
-                radioTextField.setText(String.format(new Locale("es", "CO"), "%.4f", radioValueAtStart * scale));
-                break;
-            default:
-                baseTextField.setText(String.format(new Locale("es", "CO"), "%.4f", baseValueAtStart * scale));
-                heightTextField.setText(String.format(new Locale("es", "CO"), "%.4f", heightValueAtStart * scale));
-                break;
+        boolean isCircle = figura.contains("Circunferencia") || figura.contains("Circular")
+                || figura.contains("Cilindro") || figura.contains("Esfera");
+        boolean isCube = figura.equals("Cubo");
+
+        if (isCircle) {
+            radioTextField.setText(String.format(new Locale("es", "CO"), "%.4f", radioValueAtStart * scale));
+        } else if (isCube) {
+            baseTextField.setText(String.format(new Locale("es", "CO"), "%.4f", baseValueAtStart * scale));
+        } else {
+            baseTextField.setText(String.format(new Locale("es", "CO"), "%.4f", baseValueAtStart * scale));
+            heightTextField.setText(String.format(new Locale("es", "CO"), "%.4f", heightValueAtStart * scale));
         }
         redraw();
     }
@@ -302,14 +303,21 @@ public class UnifiedFlowController {
         if (figura == null)
             return;
         boolean isCircle = figura.contains("Circunferencia") || figura.contains("Circular")
-                || figura.contains("Cilindro");
+                || figura.contains("Cilindro") || figura.contains("Esfera") || figura.contains("Cono");
+        boolean isCube = figura.equals("Cubo");
 
         setVisible(baseLabel, !isCircle);
         setVisible(baseTextField, !isCircle);
-        setVisible(heightLabel, !isCircle);
-        setVisible(heightTextField, !isCircle);
+        setVisible(heightLabel, !isCircle && !isCube);
+        setVisible(heightTextField, !isCircle && !isCube);
         setVisible(radioLabel, isCircle);
         setVisible(radioTextField, isCircle);
+
+        if (isCube) {
+            baseLabel.setText("Lado (m):");
+        } else {
+            baseLabel.setText("Base (m):");
+        }
 
         redraw();
     }
@@ -325,13 +333,16 @@ public class UnifiedFlowController {
         if (figura == null)
             return 0;
 
-        if (figura.contains("Circunferencia") || figura.contains("Circular") || figura.contains("Cilindro")) {
+        if (figura.contains("Circunferencia") || figura.contains("Circular") || figura.contains("Cilindro") || figura.contains("Esfera") || figura.contains("Cono")) {
             double radio = parseDoubleLocal(radioTextField.getText());
             return Math.PI * Math.pow(radio, 2);
-        } else if (figura.contains("Triángulo") || figura.contains("Triangular")) {
+        } else if (figura.contains("Triángulo") || figura.contains("Triangular") || figura.contains("Pirámide") || figura.contains("Prisma Triangular")) {
             double base = parseDoubleLocal(baseTextField.getText());
             double height = parseDoubleLocal(heightTextField.getText());
             return (base * height) / 2.0;
+        } else if (figura.equals("Cubo")) {
+            double lado = parseDoubleLocal(baseTextField.getText());
+            return lado * lado;
         } else {
             // Rectángulo o Prisma
             double base = parseDoubleLocal(baseTextField.getText());
@@ -351,9 +362,13 @@ public class UnifiedFlowController {
             double angleRad = Math.toRadians(angle);
 
             int angleInt = (int) Math.round(angle) % 360;
-            double cosAngle = (angleInt == 90 || angleInt == 270 || angleInt == 180)
-                    ? 0.0
-                    : Math.cos(angleRad);
+            double cosAngle;
+            if (angleInt == 90 || angleInt == 270) {
+                cosAngle = 0.0;
+            } else {
+                cosAngle = Math.cos(angleRad);
+                if (Math.abs(cosAngle) < 1e-10) cosAngle = 0.0;
+            }
 
             double areaVal = area();
             double flujo = campo * areaVal * cosAngle;
@@ -525,9 +540,18 @@ public class UnifiedFlowController {
             case "Prisma Rectangular" -> {
                 surface = new javafx.scene.shape.Box(unit * 2, unit * 1.2, unit);
             }
+            case "Prisma Triangular" -> {
+                // Cilindro con 3 divisiones simula un prisma triangular
+                surface = new javafx.scene.shape.Cylinder(unit * 1.2, unit * 2, 3);
+            }
+            case "Prisma Hexagonal" -> {
+                surface = new javafx.scene.shape.Cylinder(unit * 1.2, unit * 2, 6);
+            }
             case "Pirámide" -> {
-                // Aproximación con cilindro (cono visual)
-                surface = new javafx.scene.shape.Cylinder(unit * 0.8, unit * 2);
+                surface = crearPiramide(unit * 2, unit * 2, unit * 2);
+            }
+            case "Cono" -> {
+                surface = crearCono(unit * 1.2, unit * 2, 32);
             }
             default -> {
                 // Figuras 2D legacy (placas planas)
@@ -566,6 +590,47 @@ public class UnifiedFlowController {
         shapeGroup.getTransforms().add(new javafx.scene.transform.Rotate(-angle, javafx.scene.transform.Rotate.Z_AXIS));
 
         generador3D.getElementosGraficos().getChildren().add(shapeGroup);
+    }
+
+    private javafx.scene.shape.MeshView crearPiramide(double w, double h, double d) {
+        javafx.scene.shape.TriangleMesh mesh = new javafx.scene.shape.TriangleMesh();
+        mesh.getPoints().addAll(
+                0, (float)(-h/2), 0,
+                (float)(-w/2), (float)(h/2), (float)(-d/2),
+                (float)(w/2), (float)(h/2), (float)(-d/2),
+                (float)(w/2), (float)(h/2), (float)(d/2),
+                (float)(-w/2), (float)(h/2), (float)(d/2)
+        );
+        mesh.getTexCoords().addAll(0, 0);
+        mesh.getFaces().addAll(
+                0,0, 2,0, 1,0,
+                0,0, 3,0, 2,0,
+                0,0, 4,0, 3,0,
+                0,0, 1,0, 4,0,
+                1,0, 2,0, 3,0,
+                1,0, 3,0, 4,0
+        );
+        return new javafx.scene.shape.MeshView(mesh);
+    }
+
+    private javafx.scene.shape.MeshView crearCono(double radius, double height, int divisions) {
+        javafx.scene.shape.TriangleMesh mesh = new javafx.scene.shape.TriangleMesh();
+        mesh.getPoints().addAll(0, (float)(-height/2), 0); // Top vertex
+        mesh.getPoints().addAll(0, (float)(height/2), 0);  // Center of base
+        for (int i = 0; i < divisions; i++) {
+            double ang = 2 * Math.PI * i / divisions;
+            mesh.getPoints().addAll((float)(radius * Math.cos(ang)), (float)(height/2), (float)(radius * Math.sin(ang)));
+        }
+        mesh.getTexCoords().addAll(0, 0);
+        for (int i = 0; i < divisions; i++) {
+            int p1 = 2 + i;
+            int p2 = 2 + ((i + 1) % divisions);
+            // Side
+            mesh.getFaces().addAll(0,0, p1,0, p2,0);
+            // Base
+            mesh.getFaces().addAll(1,0, p2,0, p1,0);
+        }
+        return new javafx.scene.shape.MeshView(mesh);
     }
 
     private void drawElectricFieldArrows(GraphicsContext gc, double W, double H) {
@@ -665,9 +730,9 @@ public class UnifiedFlowController {
 
         String figura = figuraComboBox.getValue();
         String areaFormula;
-        if (figura.equals("Circunferencia") || figura.equals("Esfera") || figura.equals("Cilindro")) {
+        if (figura.equals("Circunferencia") || figura.equals("Esfera") || figura.equals("Cilindro") || figura.equals("Cono")) {
             areaFormula = String.format(co, "  A = π·r²  =  %.4f m²", lastArea);
-        } else if (figura.equals("Triángulo") || figura.equals("Pirámide")) {
+        } else if (figura.equals("Triángulo") || figura.equals("Pirámide") || figura.equals("Prisma Triangular")) {
             areaFormula = String.format(co, "  A = (b·h)/2  =  %.4f m²", lastArea);
         } else if (figura.equals("Cubo")) {
             areaFormula = String.format(co, "  A = lado²  =  %.4f m²", lastArea);

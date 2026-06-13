@@ -127,10 +127,7 @@
 
                   <Pane fx:id="canvasPane" style="-fx-background-color: transparent;" HBox.hgrow="ALWAYS" maxWidth="Infinity" maxHeight="Infinity">
                      <children>
-                        <!-- Removed campoElectricoImgView -->
                         <Canvas fx:id="cartesianCanvas" height="100.0" width="100.0" />
-                        
-                        <!-- Figuras renderizadas dinámicamente mediante Canvas (código) -->
                      </children>
                   </Pane>
 
