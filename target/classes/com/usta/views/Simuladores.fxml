@@ -62,8 +62,8 @@
 
                     </StackPane>
                     
-                    <Label text="Ley de Gauss (beta1)" styleClass="card-subtitle"/>
-                  <!--  <Label text="Simulador" styleClass="card-title-id"/>  -->
+                    <Label text="Ley de Gauss" styleClass="card-subtitle"/>
+
                 </children>
             </VBox>
 
