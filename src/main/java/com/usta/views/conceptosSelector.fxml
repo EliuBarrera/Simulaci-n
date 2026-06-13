@@ -85,6 +85,25 @@
                     <Label text="Flujo Eléctrico" styleClass="card-subtitle"/>
                 </children>
             </VBox>
+
+            <VBox styleClass="card, card-estudiante" onMouseClicked="#conceptosPotencial">
+                <children>
+                    <StackPane>
+                        <padding><Insets top="20" bottom="10"/></padding>
+                       <Circle radius="75" stroke="WHITE" strokeWidth="3">
+                           <fill>
+                     <ImagePattern>
+                            <image>
+                             <Image url="@img/PotencialElectrico.png" />
+                         </image>
+                  </ImagePattern>
+                             </fill>
+                     </Circle>
+                    </StackPane>
+                    
+                    <Label text="Potencial Eléctrico" styleClass="card-subtitle"/>
+                </children>
+            </VBox>
         </HBox>
 
         <Button text="Volver" onAction="#volverLogin" styleClass="botonSalir"/>

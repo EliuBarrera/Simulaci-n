@@ -95,31 +95,6 @@
           </content>
         </Tab>
 
-        <!-- ── Rutas ─────────────────────────────────────────────────────── -->
-        <Tab style="-fx-background-color: #8CDFFF;" text="Conexiones">
-          <content>
-            <AnchorPane prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: #8CDFFF;">
-              <children>
-                <VBox spacing="10" style="-fx-background-color: #8CDFFF;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                  <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
-                  <children>
-                    <Label text="Conectar Partículas" />
-                    <ComboBox fx:id="origenRutaComboBox" prefHeight="54.0" prefWidth="168.0" promptText="Partícula Origen" />
-                    <ComboBox fx:id="destinoRutaComboBox" prefHeight="54.0" prefWidth="174.0" promptText="Partícula Destino" />
-                    <Button onAction="#agregarRuta" text="Conectar Partículas" />
-                    <Label text="  " />
-                    <Label text="  " />
-                    <Label text="Desconectar" />
-                    <ComboBox fx:id="eliminarRutaComboBox" promptText="Eliminar Ruta" />
-                    <Button fx:id="eliminarRutaButton" onAction="#eliminarRuta" text="Eliminar Ruta" />
-                    <Label text=" " />
-                  </children>
-                </VBox>
-              </children>
-            </AnchorPane>
-          </content>
-        </Tab>
-
         <!-- ── Cálculos ──────────────────────────────────────────────────── -->
         <Tab style="-fx-background-color: #B3F0FF;" text="Cálculos">
           <content>
@@ -144,6 +119,10 @@
 
                     <Button fx:id="calcularButton" onAction="#iniciarCalculo" text="Calcular " />
                     <Button fx:id="cancelarButton" disable="true" onAction="#cancelarCalculo" text="Cancelar" />
+
+                    <!-- Líneas de campo (solo visible en 2D) -->
+                    <Separator />
+                    <CheckBox fx:id="lineasCampoCheckBox" onAction="#toggleLineasCampo" style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #004d40;" text="⚡ Líneas de Campo" />
                     
                     <Separator />
                     <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Resultados:" />
@@ -185,55 +164,7 @@
           </content>
         </Tab>
 
-        <!-- ── Animación ─────────────────────────────────────────────────── -->
-        <Tab fx:id="animacionTab" onSelectionChanged="#onAnimacionTabSeleccionada" style="-fx-background-color: #4dd0e1;" text="Animación">
-          <content>
-            <AnchorPane prefHeight="541.0" prefWidth="200.0" style="-fx-background-color: #e0f7fa;">
-              <children>
-                <VBox spacing="10" style="-fx-background-color: #e0f7fa;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                  <padding><Insets bottom="20.0" left="16.0" right="16.0" top="20.0" /></padding>
-                  <children>
 
-                    <!-- Título -->
-                    <Label style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #004d40;" text="Animación paso a paso" />
-                    <Label style="-fx-font-size: 10px; -fx-text-fill: #00695c;" text="Potencial y Energía Eléctrica" wrapText="true" />
-
-                    <!-- Indicador de paso -->
-                    <Label fx:id="pasoIndicadorLabel" style="-fx-font-size: 11px; -fx-text-fill: #004d40;                                   -fx-background-color: #b2ebf2;                                   -fx-background-radius: 8;                                   -fx-border-color: #4dd0e1;                                   -fx-border-width: 1.5;                                   -fx-border-radius: 8;                                   -fx-padding: 8 10 8 10;                                   -fx-font-weight: bold;" text="Sin cálculo activo" wrapText="true" />
-
-                    <!-- Descripción del paso -->
-                    <Label fx:id="pasoDescripcionLabel" style="-fx-font-size: 10px; -fx-text-fill: #00695c;                                   -fx-padding: 2 0 2 0;" text="" wrapText="true" />
-
-                    <!-- Barra de progreso ASCII -->
-                    <Label fx:id="barraProgresoLabel" style="-fx-font-size: 12px; -fx-text-fill: #00acc1;                                   -fx-font-family: 'Courier New';" text="──────────" />
-
-                    <!-- Botones Anterior / Siguiente -->
-                    <HBox alignment="CENTER" spacing="8">
-                      <Button fx:id="btnAnteriorPaso" disable="true" onAction="#anteriorPaso" prefHeight="30" prefWidth="88" text="◀ Anterior" />
-                      <Button fx:id="btnSiguientePaso" disable="true" onAction="#siguientePaso" prefHeight="30" prefWidth="88" text="Siguiente ▶" />
-                    </HBox>
-
-                    <!-- Botón Reiniciar -->
-                    <Button fx:id="btnReiniciarAnimacion" disable="true" onAction="#reiniciarAnimacion" prefHeight="28" prefWidth="186" text="↺  Reiniciar" />
-
-                    <!-- Botón Detener animación -->
-                    <Button fx:id="btnDetenerAnimacion" disable="true" onAction="#detenerAnimacion" prefHeight="28" prefWidth="186" style="-fx-background-color: linear-gradient(to bottom,#ef5350,#c62828);                                    -fx-text-fill: white; -fx-font-weight: bold;                                    -fx-background-radius: 10; -fx-padding: 10 20;" text="⏹  Detener animación" />
-
-                    <!-- Separador visual -->
-                    <Label prefHeight="4" text=" " />
-
-                    <!-- Leyenda -->
-                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;                                   -fx-text-fill: #004d40;" text="Leyenda" />
-                    <Label style="-fx-text-fill: #c62828; -fx-font-size: 10px;" text="● Rojo   → Partícula origen" />
-                    <Label style="-fx-text-fill: #00838f; -fx-font-size: 10px;" text="● Color  → Causante activo" />
-                    <Label style="-fx-text-fill: #00acc1; -fx-font-size: 10px;" text="- - -    → Vector r (distancia)" />
-
-                  </children>
-                </VBox>
-              </children>
-            </AnchorPane>
-          </content>
-        </Tab>
 
       </tabs>
     </TabPane>

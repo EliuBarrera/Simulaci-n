@@ -24,6 +24,11 @@ public class ConceptosSelectorController {
     }
 
     @FXML
+    private void conceptosPotencial() throws IOException {
+        App.setRoot("conceptosPotencial");
+    }
+
+    @FXML
     private void volverLogin() throws IOException {
         App.setRoot("login");
     }

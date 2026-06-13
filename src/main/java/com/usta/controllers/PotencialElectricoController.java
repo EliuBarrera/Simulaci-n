@@ -1,7 +1,6 @@
 package com.usta.controllers;
 
 import com.usta.App;
-import com.usta.controllers.Handlers.AnimacionPotencialHandler;
 import com.usta.controllers.Handlers.CalculoPotencialHandler;
 import com.usta.controllers.Handlers.DetallesPdfPotencialHandler;
 import com.usta.controllers.Handlers.EtiquetaReposicionador;
@@ -10,11 +9,13 @@ import com.usta.controllers.Handlers.Modo3DHandler;
 import com.usta.controllers.Handlers.NodoDragHandler;
 import com.usta.controllers.Handlers.ParticulaHandler;
 import com.usta.controllers.Handlers.RutaHandler;
+import com.usta.models.Arista;
 import com.usta.models.Grafo;
 import com.usta.models.Nodo;
 import com.usta.models.ResultadoPotencial;
 import com.usta.utils.CoordenadasTransformador;
 import com.usta.utils.GeneradorEscena3D;
+import com.usta.utils.LineasDeCampoRenderer;
 import com.usta.utils.UnidadDistancia;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Controlador principal para la vista de Ley de Coulomb.
+ * Controlador principal para la vista de Potencial Eléctrico.
  *
  * Actúa exclusivamente como <em>coordinador</em>: mantiene el estado
  * compartido e instancia/enlaza los handlers especializados.
@@ -42,14 +43,15 @@ import java.util.Map;
  * - Mantener {@code modo3D} y {@code unidadActual} como fuente de verdad.
  * - Inicializar el grafo, los handlers y los controles FXML.
  * - Recibir eventos @FXML y delegar sin lógica adicional.
+ * - Auto-conectar partículas (conexiones automáticas entre todas las partículas).
+ * - Dibujar líneas de campo eléctrico en modo 2D.
  *
  * Lógica delegada:
  * - Partículas → {@link ParticulaHandler}
- * - Rutas → {@link RutaHandler}
- * - Cálculo → {@link CalculoHandler}
+ * - Rutas → {@link RutaHandler}  (usadas internamente para auto-conexiones visuales)
+ * - Cálculo → {@link CalculoPotencialHandler}
  * - Renderizado → {@link GrafoRenderer}
- * - PDF/Detalles → {@link DetallesPdfHandler}
- * - Animación → {@link AnimacionTabHandler}
+ * - PDF/Detalles → {@link DetallesPdfPotencialHandler}
  * - Arrastre nodos → {@link NodoDragHandler}
  * - Toggle 2D/3D → {@link Modo3DHandler}
  * - Etiquetas → {@link EtiquetaReposicionador}
@@ -108,14 +110,6 @@ public class PotencialElectricoController {
     @FXML
     private HBox editCoordZBox;
 
-    // ── FXML: rutas ───────────────────────────────────────────────────────────
-    @FXML
-    private ComboBox<String> origenRutaComboBox;
-    @FXML
-    private ComboBox<String> destinoRutaComboBox;
-    @FXML
-    private ComboBox<String> eliminarRutaComboBox;
-
     // ── FXML: cálculos ────────────────────────────────────────────────────────
     @FXML
     private ComboBox<String> particulaOrigenComboBox;
@@ -126,6 +120,10 @@ public class PotencialElectricoController {
     @FXML
     private Button cancelarButton;
 
+    // ── FXML: líneas de campo ─────────────────────────────────────────────────
+    @FXML
+    private CheckBox lineasCampoCheckBox;
+
     // ── FXML: resultados ──────────────────────────────────────────────────────
     @FXML
     private Label resultadoPotencialLabel;
@@ -134,29 +132,12 @@ public class PotencialElectricoController {
     @FXML
     private TextArea calculosDetalladosTextArea;
 
-    // ── FXML: animación ───────────────────────────────────────────────────────
-    @FXML
-    private Tab animacionTab;
-    @FXML
-    private Label pasoIndicadorLabel;
-    @FXML
-    private Label pasoDescripcionLabel;
-    @FXML
-    private Label barraProgresoLabel;
-    @FXML
-    private Button btnAnteriorPaso;
-    @FXML
-    private Button btnSiguientePaso;
-    @FXML
-    private Button btnReiniciarAnimacion;
-    @FXML
-    private Button btnDetenerAnimacion;
-
     // ── Estado compartido ─────────────────────────────────────────────────────
     private Grafo grafo;
     private Map<Nodo, Circle> nodoCirculos;
     private ObservableList<String> nombresParticulas;
     private boolean modo3D = false;
+    private boolean lineasCampoActivas = false;
     private UnidadDistancia unidadActual = UnidadDistancia.METROS;
     private ResultadoPotencial ultimoResultado;
     private ToggleGroup polaridadGroup;
@@ -167,7 +148,6 @@ public class PotencialElectricoController {
     private CalculoPotencialHandler calculoHandler;
     private GrafoRenderer renderer;
     private DetallesPdfPotencialHandler detallesPdfHandler;
-    private AnimacionPotencialHandler animacionHandler;
     private GeneradorEscena3D generador3D;
     private NodoDragHandler dragHandler;
     private Modo3DHandler modo3DHandler;
@@ -189,7 +169,6 @@ public class PotencialElectricoController {
         calculoHandler = new CalculoPotencialHandler(grafo, canvasPlano);
         renderer = new GrafoRenderer(grafoPane, canvasPlano);
         detallesPdfHandler = new DetallesPdfPotencialHandler(grafoPane);
-        animacionHandler = new AnimacionPotencialHandler();
 
         // 3D
         generador3D = new GeneradorEscena3D(1000, 800);
@@ -207,9 +186,11 @@ public class PotencialElectricoController {
                 grafoPane, nodoCirculos, rutaHandler,
                 () -> etiquetaReposicionador.crearTransformador(unidadActual),
                 () -> modo3D);
+        dragHandler.setOnDragUpdate(this::redibujarCanvas);
 
+        // Nota: animacionTab ya no existe, se pasa null al Modo3DHandler
         modo3DHandler = new Modo3DHandler(
-                canvasPlano, scrollPane, grafoPane, tabPanePrincipal, animacionTab,
+                canvasPlano, scrollPane, grafoPane, tabPanePrincipal, null,
                 coordZBox, editCoordZBox, modo3DInfoLabel,
                 generador3D, renderer, rutaHandler, grafo, nodoCirculos,
                 etiquetaReposicionador,
@@ -217,19 +198,15 @@ public class PotencialElectricoController {
 
         // Enlazar campos FXML a los handlers
         enlazarCamposParticula();
-        enlazarCamposRuta();
+        enlazarCamposRutaInterno();
         enlazarCamposCalculo();
         enlazarCamposDetalles();
-        enlazarCamposAnimacion();
 
         // Combos de partículas
-        origenRutaComboBox.setItems(nombresParticulas);
-        destinoRutaComboBox.setItems(nombresParticulas);
         particulaEliminarComboBox.setItems(nombresParticulas);
         particulaOrigenComboBox.setItems(nombresParticulas);
         if (particulaEditarComboBox != null)
             particulaEditarComboBox.setItems(nombresParticulas);
-        eliminarRutaComboBox.setItems(FXCollections.observableArrayList());
 
         polaridadGroup = new ToggleGroup();
         positivaToggle.setToggleGroup(polaridadGroup);
@@ -271,8 +248,8 @@ public class PotencialElectricoController {
         // Canvas 20x15 unidades (STEP=100, MARGIN=40 -> 2080x1580 px)
         canvasPlano.setWidth(2080);
         canvasPlano.setHeight(1580);
-        canvasPlano.widthProperty().addListener((obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
-        canvasPlano.heightProperty().addListener((obs, o, n) -> renderer.dibujarCuadrante(unidadActual));
+        canvasPlano.widthProperty().addListener((obs, o, n) -> redibujarCanvas());
+        canvasPlano.heightProperty().addListener((obs, o, n) -> redibujarCanvas());
         renderer.dibujarCuadrante(unidadActual);
 
         // TextArea de detalles
@@ -327,10 +304,14 @@ public class PotencialElectricoController {
             Circle c = nodoCirculos.get(ultimo);
             if (c != null)
                 dragHandler.hacerArrastrable(c, ultimo);
+            // Auto-conectar la nueva partícula con todas las demás
+            autoConectarParticulas();
             if (modo3D)
                 generador3D.sincronizarGrafo(grafo, unidadActual);
-            else
+            else {
                 rutaHandler.actualizarVisuales(false, t, unidadActual);
+                redibujarCanvas();
+            }
         });
     }
 
@@ -344,9 +325,12 @@ public class PotencialElectricoController {
         }
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.eliminar(() -> {
+            // Re-crear auto-conexiones tras la eliminación
+            autoConectarParticulas();
             if (modo3D)
                 generador3D.sincronizarGrafo(grafo, unidadActual);
             rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
+            redibujarCanvas();
         });
         if (nombre != null && nombre.equals(particulaOrigenComboBox.getValue()))
             particulaOrigenComboBox.getSelectionModel().clearSelection();
@@ -356,28 +340,13 @@ public class PotencialElectricoController {
     private void editarParticula() {
         CoordenadasTransformador t = crearTransformador();
         particulaHandler.editar(modo3D, t, () -> {
+            // Re-crear auto-conexiones tras la edición
+            autoConectarParticulas();
             if (modo3D)
                 generador3D.sincronizarGrafo(grafo, unidadActual);
             rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
+            redibujarCanvas();
         });
-    }
-
-    @FXML
-    private void agregarRuta() {
-        rutaHandler.agregar(modo3D);
-        CoordenadasTransformador t = crearTransformador();
-        if (modo3D)
-            generador3D.sincronizarGrafo(grafo, unidadActual);
-        rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
-    }
-
-    @FXML
-    private void eliminarRuta() {
-        rutaHandler.eliminar();
-        CoordenadasTransformador t = crearTransformador();
-        if (modo3D)
-            generador3D.sincronizarGrafo(grafo, unidadActual);
-        rutaHandler.actualizarVisuales(modo3D, t, unidadActual);
     }
 
     @FXML
@@ -417,34 +386,20 @@ public class PotencialElectricoController {
     @FXML
     private void toggleModo3D() {
         modo3D = modo3DCheckBox.isSelected();
+        // Desactivar líneas de campo en 3D
+        if (modo3D && lineasCampoActivas) {
+            lineasCampoActivas = false;
+            lineasCampoCheckBox.setSelected(false);
+        }
+        // Ocultar/mostrar el checkbox de líneas de campo según el modo
+        lineasCampoCheckBox.setDisable(modo3D);
         modo3DHandler.toggle(modo3D, unidadActual);
     }
 
     @FXML
-    private void onAnimacionTabSeleccionada(Event e) {
-        animacionHandler.onTabSeleccionada(
-                ultimoResultado, unidadActual, grafoPane, nodoCirculos,
-                this::limpiarEstadoCalculo);
-    }
-
-    @FXML
-    private void siguientePaso() {
-        animacionHandler.siguiente(ultimoResultado);
-    }
-
-    @FXML
-    private void anteriorPaso() {
-        animacionHandler.anterior(ultimoResultado);
-    }
-
-    @FXML
-    private void detenerAnimacion() {
-        animacionHandler.detener();
-    }
-
-    @FXML
-    private void reiniciarAnimacion() {
-        animacionHandler.reiniciar(ultimoResultado, unidadActual, grafoPane, nodoCirculos);
+    private void toggleLineasCampo() {
+        lineasCampoActivas = lineasCampoCheckBox.isSelected();
+        redibujarCanvas();
     }
 
     @FXML
@@ -480,7 +435,7 @@ public class PotencialElectricoController {
         if (modo3D)
             renderer.dibujarCuadrante3D(unidadActual, t);
         else
-            renderer.dibujarCuadrante(unidadActual);
+            redibujarCanvas();
     }
 
     /** Limpia labels de resultado, flechas y cancelar cálculo activo. */
@@ -491,6 +446,46 @@ public class PotencialElectricoController {
         resultadoPotencialLabel.setText(" ");
         resultadoEnergiaLabel.setText(" ");
         ultimoResultado = null;
+    }
+
+    /**
+     * Redibuja el canvas: cuadrícula + líneas de campo (si están activas).
+     */
+    private void redibujarCanvas() {
+        renderer.dibujarCuadrante(unidadActual);
+        if (lineasCampoActivas && !modo3D) {
+            LineasDeCampoRenderer.dibujar(canvasPlano, grafo.getNodos(), unidadActual);
+        }
+    }
+
+    /**
+     * Auto-conecta todas las partículas entre sí.
+     * Limpia las aristas anteriores y crea una conexión completa (grafo completo)
+     * entre todos los nodos presentes. Esto es exclusivo de Potencial Eléctrico:
+     * en Ley de Coulomb las conexiones siguen siendo manuales.
+     */
+    private void autoConectarParticulas() {
+        // Limpiar todas las aristas existentes
+        grafo.getAristas().clear();
+
+        // Crear conexiones entre todos los pares de partículas
+        java.util.List<Nodo> nodos = grafo.getNodos();
+        for (int i = 0; i < nodos.size(); i++) {
+            for (int j = i + 1; j < nodos.size(); j++) {
+                Nodo a = nodos.get(i);
+                Nodo b = nodos.get(j);
+                double dist;
+                if (modo3D) {
+                    dist = Math.sqrt(
+                            Math.pow(a.getX() - b.getX(), 2) +
+                            Math.pow(a.getY() - b.getY(), 2) +
+                            Math.pow(a.getZ() - b.getZ(), 2));
+                } else {
+                    dist = Math.hypot(a.getX() - b.getX(), a.getY() - b.getY());
+                }
+                grafo.agregarArista(new Arista(a, b, dist));
+            }
+        }
     }
 
     private void cargarSistemaPrueba() {
@@ -518,15 +513,7 @@ public class PotencialElectricoController {
         coordZField.setText("0");
         agregarParticula();
 
-        origenRutaComboBox.setValue("q1");
-        destinoRutaComboBox.setValue("q2");
-        agregarRuta();
-        origenRutaComboBox.setValue("q2");
-        destinoRutaComboBox.setValue("q3");
-        agregarRuta();
-        origenRutaComboBox.setValue("q3");
-        destinoRutaComboBox.setValue("q1");
-        agregarRuta();
+        // Las conexiones son automáticas, no se necesitan rutas manuales
 
         nombreParticulaField.clear();
         positivaToggle.setSelected(true);
@@ -567,10 +554,20 @@ public class PotencialElectricoController {
         particulaHandler.editCoordZField = editCoordZField;
     }
 
-    private void enlazarCamposRuta() {
-        rutaHandler.origenRutaComboBox = origenRutaComboBox;
-        rutaHandler.destinoRutaComboBox = destinoRutaComboBox;
-        rutaHandler.eliminarRutaComboBox = eliminarRutaComboBox;
+    /**
+     * Enlaza los combos del RutaHandler internamente.
+     * En Potencial Eléctrico los combos de conexiones ya no existen en la UI,
+     * pero el RutaHandler aún se usa para dibujar las líneas de conexión visuales.
+     * Se crean ComboBox internos que no se muestran al usuario.
+     */
+    private void enlazarCamposRutaInterno() {
+        rutaHandler.origenRutaComboBox = new ComboBox<>();
+        rutaHandler.destinoRutaComboBox = new ComboBox<>();
+        rutaHandler.eliminarRutaComboBox = new ComboBox<>();
+        // Estos combos son internos; el usuario no interactúa con ellos
+        rutaHandler.origenRutaComboBox.setItems(nombresParticulas);
+        rutaHandler.destinoRutaComboBox.setItems(nombresParticulas);
+        rutaHandler.eliminarRutaComboBox.setItems(FXCollections.observableArrayList());
     }
 
     private void enlazarCamposCalculo() {
@@ -584,16 +581,5 @@ public class PotencialElectricoController {
 
     private void enlazarCamposDetalles() {
         detallesPdfHandler.calculosDetalladosTextArea = calculosDetalladosTextArea;
-    }
-
-    private void enlazarCamposAnimacion() {
-        animacionHandler.animacionTab = animacionTab;
-        animacionHandler.pasoIndicadorLabel = pasoIndicadorLabel;
-        animacionHandler.pasoDescripcionLabel = pasoDescripcionLabel;
-        animacionHandler.barraProgresoLabel = barraProgresoLabel;
-        animacionHandler.btnAnteriorPaso = btnAnteriorPaso;
-        animacionHandler.btnSiguientePaso = btnSiguientePaso;
-        animacionHandler.btnReiniciarAnimacion = btnReiniciarAnimacion;
-        animacionHandler.btnDetenerAnimacion = btnDetenerAnimacion;
     }
 }

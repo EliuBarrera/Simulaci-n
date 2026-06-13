@@ -102,10 +102,12 @@ public class Modo3DHandler {
             editCoordZBox.setManaged(activar);
         }
 
-        // Pestaña de animación solo disponible en 2D
-        animacionTab.setDisable(activar);
-        if (activar && tabPanePrincipal.getSelectionModel().getSelectedItem() == animacionTab) {
-            tabPanePrincipal.getSelectionModel().select(0);
+        // Pestaña de animación solo disponible en 2D (si existe)
+        if (animacionTab != null) {
+            animacionTab.setDisable(activar);
+            if (activar && tabPanePrincipal.getSelectionModel().getSelectedItem() == animacionTab) {
+                tabPanePrincipal.getSelectionModel().select(0);
+            }
         }
 
         // Limpiar cálculo previo

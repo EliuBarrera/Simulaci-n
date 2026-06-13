@@ -1,6 +1,5 @@
 package com.usta.utils;
 
-import com.usta.models.Arista;
 import com.usta.models.Grafo;
 import com.usta.models.Nodo;
 import com.usta.models.ResultadoPotencial;
@@ -33,8 +32,10 @@ public class PotencialCalculator {
     }
 
     public ResultadoPotencial calcular(Nodo particulaOrigen) {
-        Set<Nodo> conectados = obtenerConectados(particulaOrigen);
-        if (conectados.isEmpty()) return null;
+        // En Potencial Eléctrico las conexiones son automáticas:
+        // se usan TODAS las demás partículas del grafo, no solo las conectadas con aristas.
+        Set<Nodo> otrosNodos = obtenerOtrosNodos(particulaOrigen);
+        if (otrosNodos.isEmpty()) return null;
 
         double x0 = particulaOrigen.getX();
         double y0 = particulaOrigen.getY();
@@ -45,7 +46,7 @@ public class PotencialCalculator {
         double potencialTotalV = 0;
         double energiaTotalU = 0;
 
-        for (Nodo nd : conectados) {
+        for (Nodo nd : otrosNodos) {
             ResultadoPotencialIndividual rpi = calcularPotencialIndividual(particulaOrigen, x0, y0, z0, q0, nd);
             individuales.add(rpi);
             potencialTotalV += rpi.getPotencialV();
@@ -106,13 +107,17 @@ public class PotencialCalculator {
         );
     }
 
-    private Set<Nodo> obtenerConectados(Nodo nodo) {
-        Set<Nodo> conectados = new HashSet<>();
-        for (Arista arista : grafo.getAristas()) {
-            if (arista.getOrigen().equals(nodo))       conectados.add(arista.getDestino());
-            else if (arista.getDestino().equals(nodo)) conectados.add(arista.getOrigen());
+    /**
+     * Devuelve todos los nodos del grafo excepto el nodo dado.
+     * En Potencial Eléctrico, cada partícula interactúa con todas las demás
+     * automáticamente (no se requieren conexiones manuales).
+     */
+    private Set<Nodo> obtenerOtrosNodos(Nodo nodo) {
+        Set<Nodo> otros = new HashSet<>();
+        for (Nodo n : grafo.getNodos()) {
+            if (!n.equals(nodo)) otros.add(n);
         }
-        return conectados;
+        return otros;
     }
 
     public static double getConstanteK() {

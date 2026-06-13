@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.usta.controllers.ConceptosPotencialController"
+            fitToWidth="true"
+            styleClass="scroll-pane"
+            stylesheets="@css/Style.css">
+
+    <VBox alignment="TOP_CENTER"
+          spacing="20"
+          prefWidth="1000"
+          styleClass="fondo2"
+          stylesheets="@css/Style.css">
+        <padding>
+            <Insets top="30" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <children>
+            <!-- Título -->
+            <Text text="Conceptos Básicos - Potencial Eléctrico" styleClass="tituloConceptos">
+                <font>
+                    <Font size="28"/>
+                </font>
+            </Text>
+
+            <!-- Contenido -->
+            <VBox alignment="TOP_LEFT" spacing="20">
+                <children>
+                    <!-- Definición -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        El Potencial Eléctrico en un punto del espacio es una magnitud escalar que representa la energía potencial eléctrica que adquiriría una unidad de carga de prueba positiva si se situara en dicho punto.
+                    </Text>
+
+                    <ImageView fx:id="fc"
+                               fitWidth="800"
+                               preserveRatio="true"
+                               style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0.3, 0, 1);"
+                               pickOnBounds="true" />
+
+                    <!-- Fórmula principal -->
+                    <Label text="V = k · q / r" styleClass="formulaLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #00695c;"/>
+
+                    <!-- Variables -->
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        Donde:
+                        • V es el potencial eléctrico (en Voltios, V).
+                        • q es la magnitud de la carga eléctrica fuente (en Coulombs, C).
+                        • r es la distancia desde la carga fuente al punto de análisis (en metros, m).
+                        • k es la constante de Coulomb, aproximadamente igual a 8.99 × 10⁹ N·m²/C².
+
+                        El potencial eléctrico puede ser positivo, negativo o nulo, dependiendo de la carga que lo produce.
+                    </Text>
+
+                    <!-- Conceptos clave adicionales -->
+                    <Text text="Conceptos Clave" styleClass="tituloConceptos" style="-fx-font-size: 22px;">
+                        <font><Font size="22"/></font>
+                    </Text>
+
+                    <Text wrappingWidth="940" textAlignment="JUSTIFY" styleClass="textoConcepto">
+                        ● Energía Potencial Eléctrica (U): Es la energía que posee una carga en virtud de su posición en un campo eléctrico. Se calcula como U = q₀ · V, donde q₀ es la carga en el punto y V es el potencial en ese punto.
+
+                        ● Magnitud Escalar: A diferencia del campo eléctrico o la fuerza eléctrica (que son vectores), el potencial eléctrico es un número escalar. Esto simplifica los cálculos, ya que se suman algebraicamente.
+
+                        ● Principio de Superposición: El potencial total en un punto debido a varias cargas puntuales es simplemente la suma algebraica de los potenciales individuales debidos a cada carga: V_total = V₁ + V₂ + ... + Vₙ.
+
+                        ● Líneas de Campo Eléctrico: Indican la dirección de la fuerza eléctrica sobre una carga de prueba positiva. Salen de cargas positivas y entran a cargas negativas.
+
+                        ● Relación con el Trabajo: El trabajo W realizado por la fuerza eléctrica para mover una carga entre dos puntos es igual al cambio negativo de la energía potencial eléctrica: W = -ΔU.
+                    </Text>
+
+                    <!-- Botón para volver -->
+                    <HBox alignment="CENTER" spacing="15">
+                        <Button text="Volver a Conceptos"
+                                onAction="#volverAConceptos"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                        <Button text="Volver al Menú"
+                                onAction="#volverAlMenu"
+                                styleClass="botonMenu"
+                                maxWidth="200" />
+                    </HBox>
+                </children>
+            </VBox>
+        </children>
+    </VBox>
+</ScrollPane>

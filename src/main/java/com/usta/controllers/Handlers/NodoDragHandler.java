@@ -45,6 +45,12 @@ public class NodoDragHandler {
         this.modo3DSupplier        = modo3DSupplier;
     }
 
+    private Runnable onDragUpdate;
+
+    public void setOnDragUpdate(Runnable onDragUpdate) {
+        this.onDragUpdate = onDragUpdate;
+    }
+
     // -------------------------------------------------------------------------
     /**
      * Registra los manejadores de ratón en {@code circulo} para que el
@@ -103,6 +109,10 @@ public class NodoDragHandler {
 
             // Actualizar etiqueta de texto
             actualizarEtiqueta(nodo, screen, modo3DSupplier.getAsBoolean());
+
+            if (onDragUpdate != null) {
+                onDragUpdate.run();
+            }
 
             me.consume();
         });
